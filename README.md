@@ -57,21 +57,27 @@ After running it, you will have to:
 
 Once computations are performed, a series of figures will appear on the screen.
 
+
+
+These variables is also contained in a structure named **stats_all** (which appears in the workspace):
+1. *Netscore*: a variable corresponding to the number of "advantageous" choices (C or D)  minus the number of "disadvantageous" choices (A or B)
 ![Figure 1](Tools/OTHERS/example_figures/Net_Score.JPG)
 
-![Figure 2](Tools/OTHERS/example_figures/Other_Behavioral_Measures.JPG)
 
+2. *Win Stay (WS) and Lose Shift (LS)*: two variables reflecting the proportion of trials in which participants selected again the same deck after an outcome which involved no loss (WS) and the proportion of trials in which participants selected a different deck after an outcome involving a loss (LS)
+
+ *H(choice)*: a variable reflecting the entropy of the entire choice sequence of the subject. The maximal value of 2 (bits) implies that the participant explored all decks evenly. The lowest the value the more uneven the exploration of the different decks. The minimal value of 0 implies that the participant constantly selected the same deck.
+
+ *MI_successive_choices*: a variable reflecting the statistical mutual information of successive choices. Higher values implies that one could predict to some extent the choice in trial *t+1* by observing the choice made in trial *t*. This variable can thus be seen as reflecting the autocorrelation of successive choices.
+ ![Figure 2](Tools/OTHERS/example_figures/Other_Behavioral_Measures.JPG)
+
+3. *DE3* and *DE4*: the model-free measures of directed exploration discussed in the paper accompanying the igt-toolbox. They correspond respectively to the frequency at which participants selected 3 different decks over 3 consecutive trials (DE3: theoretic chance level:0.3333) or 4 different decks over 4 consecutive trials (DE4: theoretic chance level at 0.0938). Note that the chance levels reported as dashed lines are empirical (i.e based on permutation).
 ![Figure 3](Tools/OTHERS/example_figures/Directed_Exploration_Figure.JPG)
 
-*Note that these figures have been generated using the [dataset of Ahn and colleagues (2014)](https://doi.org/10.6084/m9.figshare.1101324.v1), published on Figshare*.
+*Note that these figures correspond to the data comparing old and young adults' behavior in the IGT, as reported in the paper accompanying this toolbox*.
 
-They report a variety of variables also contained in a structure named **stats_all** (which appears in the workspace):
-* *Netscore*: a variable corresponding to the number of "advantageous" choices (C or D)  minus the number of "disadvantageous" choices (A or B)
-* *Win Stay (WS) and Lose Shift (LS)*: two variables reflecting the proportion of trials in which participants selected again the same deck after an outcome which involved no loss (WS) and the proportion of trials in which participants selected a different deck after an outcome involving a loss (LS)
-* *H(choice)*: a variable (entropy) reflecting the entropy of the entire choice sequence of the subject. The maximal value of 2 (bits) implies that the participant explored all decks evenly. The lowest the value the more uneven the exploration of the different decks. The minimal value of 0 implies that the participant constantly selected the same deck.
-* *MI_successive_choices*: a variable (mutual information) reflecting the statistical dependency of successively choices. Higher values implies that one could predict to some extent the choice in trial *t+1* by observing the choice made in trial *t*. This variable can thus be seen as reflecting the autocorrelation of successive choices.
-* *DE3* and *DE4*: the model-free measures of directed exploration discussed in the paper accompanying the igt-toolbox. They correspond respectively to the frequency at which participants selected 3 different decks over 3 consecutive trials (DE3: theoretic chance level:0.3333) or 4 different decks over 4 consecutive trials (DE4: theoretic chance level at 0.0938). Note that the chance levels reported as dashed lines are empirical (i.e based on permutation).
 
+Importantly, the structure **stats_all** contains the raw variables, their means and standard deviations *per group/condition*, as well as the statistical tests comparing the means of groups/conditions (parametric and non-parametric). Post-hoc tests are not included.
 
 ## fit the computational models
 
@@ -158,7 +164,7 @@ A.fit.options.fminunc_n_init_random = 20;
 
 ```
 
-Note that this file is essentially a launcher script. It builds the data structure and run a series of scripts contained in the model-specific subfolders in Tools/MODELS/.
+Note that this file is essentially a launcher script. It builds the data structure and runs a series of scripts contained in the model-specific subfolders in Tools/MODELS/.
 Each of these subfolders contains a 3 files which entirely define a model:
 * an *evolution function*, which determines how the hidden states of the model evolve in response to the outcomes of each choice.
 * an *observation function*, which determines how the hidden states translate into a probability of choosing each deck.
@@ -167,3 +173,29 @@ Each of these subfolders contains a 3 files which entirely define a model:
 Again, all information relative to the procedure can be found on the website of the [VBA toolbox](https://mbb-team.github.io/VBA-toolbox/) as well as in the [seminal paper](https://doi.org/10.1371/journal.pcbi.1003441) describing it.
 
 ## analyze the modeling results
+
+The final step consists in:
+* comparing the different models in terms of goodness of fit, prediction accuracy and parameter recovery
+* testing for significant statistical differences in parameters distribution from one group/condition to another.
+
+To do so, you will need to run the script **IGT_Toolbox_3_AnalyzeModels.m**.
+
+After running it, you will have to:
+1. Select the folder containing the modeling analysis of interest
+2. Select the models that you want to include in the model comparison and other analyses
+3. Select the folder containing the dataset which was used for the fitting analysis
+4. Select the group(s) or condition(s) to be included in the statistical analysis
+5. Indicate whether the different groups/conditions reflect repeated (same subjects tested several times) or independent measurements (different subjects tested one time).
+4. Indicate whether you want to plot all your data or just the subset of the groups/conditions you have selected.
+
+Once computations are performed, a series of figures will appear on the screen.
+1. A graphical representation of the cross-correlation of all parameters: the lower, the better, because high correlation amongst parameters (especially within a given model) implies that the cognitive meaning of these parameters' value is uncertain. Exact values can be found in the structure **cross_corr**.
+![Figure 4](Tools/OTHERS/example_figures/Cross_Correlation.JPG)
+2. A representation of model comparison treated as a fixed-effect, using the EE model as the reference model: positive values correspond to the information loss which would be incured by selecting a model different from EE. Note that a -2*X transformation is applied to every goodness of fit metric because the VBA toolbox outputs log-model evidences by default (see [here](http://mbb-team.github.io/VBA-toolbox/wiki/VBA-output-structure/) for an explanation). Exact values can be found in the variable **diff_metrics**.
+![Figure 5](Tools/OTHERS/example_figures/Model_Comparison_FixedEffect.JPG)
+3. A representation of model comparison treated as a random-effect (based on the function VBA_GroupBMC). Top-left panel represents the log-model evidences (based either on AIC, BIC or Free Energy) per subject per model. Top-right panel represents the probability of each model being the correct one, per subject. Bottom-left panel represents the exceedance probability that a given model is the most frequent within the population under scrutiny. Bottom-right panel represents the estimated frequencies of each model at the group level. NB: a separate figure is generated for each goodness of fit metric (i.e BIC, AIC, Free Energy). All information about Bayesian Model Comparison can be found in the structure **post_F**, **out_F**, **post_BIC**, **out_BIC**, **post_AIC** and **out_AIC**.
+![Figure 6](Tools/OTHERS/example_figures/Model_Comparison_RandomEffect_F.JPG)
+4. A representation of the mean +/- sem value of all parameters of a given model. The color code correspond to the group/condition which have been selected for analysis. NB: a separate figure is generated for each model. All means, SD, recovery values and statistical tests related to models' parameters can be found in the structures **stats_theta** (for parameters of the evolution functions) and **stats_phi** (for parameters of the observation functions)
+![Figure 7](Tools/OTHERS/example_figures/Model_parameter_EV.JPG)
+5. A graphical representation of parameter recovery. The dashed line represents the perfect equivalence between actual parameters (in x, obtained by fitting the real dataset) and recovered parameters (in y, obtained by fitting the simulated dataset). Actual and recovered parameters for each individual can be found in the structures **theta_fitsim** and **phi_fitsim** (first column: actual parameters)
+![Figure 8](Tools/OTHERS/example_figures/Parameter_recovery.JPG)

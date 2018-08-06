@@ -16,6 +16,7 @@
 
 % clean the environment
 clear all;close all;clc;
+addpath(genpath('Tools/VBA'));
 
 % ask user for directory (what should be analyzed)
 model_dir = [uigetdir('IGTmodelfit', 'Select folder containing the models of interest') '/'];
@@ -72,7 +73,7 @@ for m = 1:size(model_list,1)
     
     % keep all parameters together, separate models by nan columns
     keep_param = [keep_param R.theta R.phi nan(size(R.theta,1),1)];
-    keep_param_names = [keep_param_names repmat([A.fit.options.inF.param_name A.fit.options.inG.param_name {'NULL'}], size(R.theta,1),1)];
+    keep_param_names = [keep_param_names repmat([A.fit.options.inF.param_name A.fit.options.inG.param_name {' '}], size(R.theta,1),1)];
     keep_model_names = [keep_model_names repmat(model_short_name(m), size(R.theta,1),size(R.theta,2)+size(R.phi,2)) repmat({'NULL'},size(R.theta,1),1)];
     
     % test effects on parameters
@@ -214,13 +215,16 @@ end
 figure('Name', 'Cross correlation of all parameters');
 cross_allparam = corr(keep_param,'type','Spearman');
 imagesc(cross_allparam);
+set(gcf, 'color', 'w');
+set(gca, 'xtick', [2 7 12.5 17.5 24.5], 'xticklabel', model_short_name)
+set(gca, 'ytick',1:size(keep_param_names,2), 'yticklabel', keep_param_names(1,:)')
 
 figure('Name', 'Goodness of fit against EE / All metrics (');
 dumcheck = strfind(model_list,'EXPLORE'); for d=1:length(dumcheck);if ~isempty(dumcheck{d});EE_ind=d;break;end;end
 diff_metrics = [-2*sum(BIC,2)-(-2*sum(BIC(EE_ind,:),2)), -2*sum(AIC,2)-(-2*sum(AIC(EE_ind,:),2)) -2*sum(F,2)-(-2*sum(F(EE_ind,:),2))];
 metrics = [-2*sum(BIC,2), -2*sum(AIC,2) -2*sum(F,2)];
 bar(diff_metrics);
-set(gca,'xticklabels', model_list)
+set(gca,'xticklabels', model_short_name)
 set(gcf, 'color', 'w');
 
 % Metrics used for Bayesian Model Comparison:
@@ -264,23 +268,28 @@ end
 
 figure('name', 'parameter recovery')
 clear g
+theta_mapping = {[1:2], [5:8], [11:13], [16:18], [21:26]};
+phi_mapping = {[3], [9], [14], [19], [27:28]};
 for m = 1:size(model_list,1)
     x = []; y = [];
     col =[];
     for t = 1:size(theta_fitsim{m},2)
         x = [x; zscore(theta_fitsim{m}{t}(:,1))];
         y = [y; zscore(theta_fitsim{m}{t}(:,2))];
-        col = [col; t*ones(length(theta_fitsim{m}{t}(:,1)),1)];
+        col = [col; keep_param_names(:,theta_mapping{m}(t))'];
     end
     for p = 1:size(phi_fitsim{m},2)
         x = [x; zscore(phi_fitsim{m}{p}(:,1))];
         y = [y; zscore(phi_fitsim{m}{p}(:,2))];
-        col = [col; length(theta_fitsim{m}) + p*ones(length(phi_fitsim{m}{p}(:,1)),1)];
+        col = [col; keep_param_names(:,phi_mapping{m}(p))'];
     end
     g(1,m) = gramm('x',x, 'y',y, 'color',col);
-    g(1,m).stat_glm('distribution', 'normal', 'geom', 'line');
+%    g(1,m).stat_glm('distribution', 'normal', 'geom', 'line');
+     g(1,m).stat_fit('fun', @(a,b,x)b*x+a, 'disp_fit', false, 'geom', 'line', 'fullrange', true);
     g(1,m).geom_funline('fun', @(x)x,'style', 'k--');
-    g(1,m).axe_property('xlim', [-3 3], 'ylim', [-3 3]);
+    g(1,m).axe_property('xlim', [-1 1], 'ylim', [-1 1]);
     g(1,m).set_color_options('map', 'lch');
+    g(1,m).set_names('x', 'actual parameters', 'y', 'recovered parameters');
+    g(1,m).set_title(model_short_name{m})
 end
 g.draw();

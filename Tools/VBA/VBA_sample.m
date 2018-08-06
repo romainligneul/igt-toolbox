@@ -35,7 +35,7 @@ switch form
         catch
             y = zeros(1,N);
             for i=1:N
-                y(i) = spm_gamrnd(suffStat.a,suffStat.b);
+                y(i) = VBA_spm_gamrnd(suffStat.a,suffStat.b);
                 if mod(i,N./20) < 1 && verbose
                     fprintf(1,repmat('\b',1,8))
                     fprintf(1,'%6.2f %%',100*i/N)
@@ -53,7 +53,7 @@ switch form
             r = zeros(K,1);
             for i=1:N
                 for k = 1:K
-                    r(k) = spm_gamrnd(suffStat.d(k),1);
+                    r(k) = VBA_spm_gamrnd(suffStat.d(k),1);
                 end
                 y(:,i) = r./sum(r);
                 if mod(i,N./20) < 1 && verbose
@@ -70,9 +70,11 @@ switch form
             K = size(suffStat.p,1);
             y = zeros(K,N);
             for i=1:suffStat.n
-                y = y + sampleFromArbitraryP(suffStat.p,eye(K),N);
-                fprintf(1,repmat('\b',1,8))
-                fprintf(1,'%6.2f %%',100*i/suffStat.n)
+                y = y + sampleFromArbitraryP(suffStat.p,eye(K),N)';
+                if verbose
+                    fprintf(1,repmat('\b',1,8))
+                    fprintf(1,'%6.2f %%',100*i/suffStat.n)
+                end
             end
         end
         

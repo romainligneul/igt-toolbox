@@ -324,18 +324,18 @@ g(1,1).set_title('NET score in time');
 g(1,1).set_names('x', 'trial', 'y', 'NET score');
 g(1,1).set_color_options('map', colormap_custom);
 % average
-x=cond_id+1;
 y=netscore_total;
 color=cond_label;
+x = ones(size(color,1), size(color,2));
 if plot_type==1
     g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
     g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
-g(2,1).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
-g(2,1).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
-g(2,1).axe_property('Xlim', [min(x)-1 max(x)+1]); ;
+g(2,1).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.7, 'width', 0.6);
+g(2,1).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.7, 'width', 0.6, 'setylim', true);
+g(2,1).axe_property('Xlim', [0 2], 'xtick', [], 'xticklabel', []); ;
 g(2,1).set_title('Final NET score');
 g(2,1).set_names('x', 'group', 'y', 'NET score');
 g(2,1).set_color_options('map', colormap_custom);
@@ -347,66 +347,66 @@ g.draw();
 figure('Name', 'Other behavioral measures','units','normalized','position',[0.55 0 .45 .45]);
 clear g;
 % average Win Stay
-x=cond_id+1;
 y=WSLS(:,1);
-color=cond_id;
+color=cond_label;
+x = ones(size(color,1), size(color,2));
 if plot_type==1
     g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
     g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
-g(1,1).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
-g(1,1).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
-g(1,1).axe_property('Xlim', [min(x)-1 max(x)+1]); ;
+g(1,1).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.7, 'width', 0.6);
+g(1,1).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.7, 'width', 0.6, 'setylim', true);
+g(1,1).axe_property('Xlim', [0 2], 'xtick', [], 'xticklabel', []); ;
 g(1,1).set_title('Win Stay');
 g(1,1).set_names('x', 'group', 'y', 'frequency');
 g(1,1).set_color_options('map', colormap_custom);
 % average Win Stay
-x=cond_id+1;
 y=WSLS(:,2);
-color=cond_id;
+color=cond_label;
+x = ones(size(color,1), size(color,2));
 if plot_type==1
     g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
     g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
-g(1,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
-g(1,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
-g(1,2).axe_property('Xlim', [min(x)-1 max(x)+1]); ;
+g(1,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.7, 'width', 0.6);
+g(1,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.7, 'width', 0.6, 'setylim', true);
+g(1,2).axe_property('Xlim', [0 2], 'xtick', [], 'xticklabel', []); ;
 g(1,2).set_title('Lose Shift');
 g(1,2).set_names('x', 'group', 'y', 'frequency');
 g(1,2).set_color_options('map', colormap_custom);
 % choice entropy
-x=cond_id+1;
 y=H_total;
-color=cond_id;
+color=cond_label;
+x = ones(size(color,1), size(color,2));
 if plot_type==1
     g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
     g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
-g(2,1).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
-g(2,1).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
-g(2,1).axe_property('Xlim', [min(x)-1 max(x)+1]); ;
+g(2,1).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.7, 'width', 0.6);
+g(2,1).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.7, 'width', 0.6, 'setylim', true);
+g(2,1).axe_property('Xlim', [0 2], 'xtick', [], 'xticklabel', []); ;
 g(2,1).set_title('H(choice)');
 g(2,1).set_names('x', 'group', 'y', 'bits');
 g(2,1).set_color_options('map', colormap_custom);
 % mutual information of successive choices (perseveration measure)
-x=cond_id+1;
 y=MI2choices_total;
 color=cond_label;
+x = ones(size(color,1), size(color,2));
 if plot_type==1
     g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
     g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
-g(2,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
-g(2,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
-g(2,2).axe_property('Xlim', [min(x)-1 max(x)+1]); ;
+g(2,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.7, 'width', 0.6);
+g(2,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.7, 'width', 0.6, 'setylim', true);
+g(2,2).axe_property('Xlim', [0 2], 'xtick', [], 'xticklabel', []); ;
 g(2,2).set_title('MI(t,t+1)');
 g(2,2).set_names('x', 'group', 'y', 'bits');
 g(2,2).set_color_options('map', colormap_custom);
@@ -432,18 +432,18 @@ g(1,1).set_names('x', 'trial', 'y', 'pattern frequency');
 g(1,1).set_color_options('map', colormap_custom);
 g(1,1).geom_hline('yintercept',mean(chance_DE3));
 % average
-x=cond_id+1;
 y=nanmean(directed_exploration3,2);
 color=cond_label;
+x=ones(size(cond_label));
 if plot_type==1
     g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
     g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
-g(1,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
-g(1,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
-g(1,2).axe_property('Xlim', [min(x)-1 max(x)+1]);
+g(1,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.7, 'width', 0.6);
+g(1,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.7, 'width', 0.6, 'setylim', true);
+g(1,2).axe_property('Xlim', [0 2], 'xtick', [], 'xticklabel', []); ;
 g(1,2).set_title('DE3 average');
 g(1,2).set_names('x', 'group', 'y', 'frequency');
 g(1,2).set_color_options('map', colormap_custom);
@@ -465,9 +465,9 @@ g(2,1).set_color_options('map', colormap_custom);
 g(2,1).geom_hline('yintercept',mean(chance_DE4));
 g(2,1).axe_property('ylim',[0 0.4]);
 % DE4 average
-x=cond_id+1;
 y=nanmean(directed_exploration4,2);
 color=cond_label;
+x = ones(size(cond_label));
 if plot_type==1
     g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
@@ -476,7 +476,7 @@ else
 end
 g(2,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
 g(2,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
-g(2,2).axe_property('Xlim', [min(x)-1 max(x)+1]);
+g(2,2).axe_property('Xlim', [0 2], 'xtick', [], 'xticklabel', []); ;
 g(2,2).set_title('DE4 average');
 g(2,2).set_names('x', 'group', 'y', 'frequency');
 g(2,2).set_color_options('map', colormap_custom);

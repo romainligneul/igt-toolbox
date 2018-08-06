@@ -143,10 +143,10 @@ end
 
 %% transformation of parameters
 % inF = evolution
-options.inF.param_name = {'sensitivity', 'decay', 'accumExpl', 'unknownValue'};%, 'pers gain', 'pers loss'};
+options.inF.param_name = {'sensitivity', 'decay', 'expl. update', 'expl. bonus'};%, 'pers gain', 'pers loss'};
 options.inF.param_transform = {Tsig Tsig Tsig TsigMin10to10};%, Tsig, Tsig};
 % inF = evolution (learning)
-options.inG.param_name = {'Consistency'};
+options.inG.param_name = {'consistency'};
 options.inG.param_transform = {Tsig0to5};
 
 %% build hidden states of interest.

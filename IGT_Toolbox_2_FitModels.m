@@ -8,6 +8,7 @@
 %
 % Romain Ligneul. 02/2017. romain.ligneul@gmail.com
 clear all;close all;
+addpath(genpath('Tools/VBA');
 
 %% Data to be used
 % in order to regenerate the dataset of the 504 subjects open dataset,
@@ -62,7 +63,7 @@ A.fit.priors.type = 'flat';
 % useful to use a small number (e.g 5) to check if everything works fine.
 % However, in order to run the script IGT_Toobox_3_AnalyzeModels, you will
 % need to analyze your whole dataset. 
-A.fit.maxsubjects = 5;
+A.fit.maxsubjects = 1000;
 
 % 2) Number of trials in the version of the IGT tested. The standard
 % version of the IGT has 100 trials, but some modified versions have 150 or
