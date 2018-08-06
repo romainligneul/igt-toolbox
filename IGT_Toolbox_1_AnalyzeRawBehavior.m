@@ -15,7 +15,7 @@
 % v1.0
 
 % clean the environment
-clear all; close all;clc; 
+clear all; close all;clc;
 % get useful function
 addpath(genpath('Tools/OTHERS'));
 % load relevant dataset (matching its folder name in IGTdata/)
@@ -28,10 +28,10 @@ colormap_custom = 'brewer1';
 
 %% Loop over subjects and compute behavioral measures
 % in order to avoid polluting the workspace with useless variable, all work
-% is saved in structure  
+% is saved in structure
 for s = 1:length(data)
     
-    disp(['subject nÂ°' num2str(s)])
+    disp(['subject n°' num2str(s)])
     
     % subject id and condition id
     subj_id(s,1) = s;
@@ -49,9 +49,9 @@ for s = 1:length(data)
     % compute win-stay lose-shift metrics
     stay = data{s}.deck(2:end)==data{s}.deck(1:end-1);
     prvloss = abs(data{s}.lose(1:end-1))>0;
-    WSLS(s,:) = [mean(stay(~prvloss)) mean(1-stay(prvloss))];
+    WSLS(s,:) = [mean(stay(~prvloss)) mean(~stay(prvloss))];
     clear stay prvloss
-   
+    
     % evaluate repeat after bigpun
     bigpun_ind = find(data{s}.lose<=-1000);
     bigpun_number(s,1) = numel(bigpun_ind);
@@ -62,14 +62,14 @@ for s = 1:length(data)
         repeat_after_bigpun(s,1) = mean(double(data{s}.deck(bigpun_ind)==data{s}.deck(bigpun_ind+1)));
     else
         repeat_after_bigpun(s,1) = NaN;
-    end 
+    end
     clear bigpun_ind
     
     % compute choice entropy and mutual information between successive
     % choices
     H_total(s,1) = h(data{s}.deck);
     MI2choices_total(s,1) = mi(data{s}.deck(1:end-1),data{s}.deck(2:end));
-
+    
     % compute directed exploration indexes
     for t = 1:98
         directed_exploration3(s,t) = double(numel(unique(data{s}.deck(t:t+2)))==3);
@@ -80,7 +80,7 @@ for s = 1:length(data)
     tt=0;
     for t = 1:4:97
         tt=tt+1;
-            directed_exploration4_fixed(s,t) = double(numel(unique(data{s}.deck(t:t+3)))==4);
+        directed_exploration4_fixed(s,t) = double(numel(unique(data{s}.deck(t:t+3)))==4);
     end
     % permute to obtain empirical chance levels on exploration indexes
     for r = 1:round(5000/length(data))
@@ -120,11 +120,16 @@ condition_selection = listdlg('PromptString', 'Select the conditions you want to
 condition_ids = cellstr(char(condition_list(condition_selection)));
 condition_number = condition_number(condition_selection);
 % ask user to define test type
-dumstr = questdlg('Are the conditions reflecting repeated measures or independent observation units?', 'Test type', 'Repeated', 'Independent', 'Independent');
-test_type = strmatch(dumstr, {'Repeated', 'Independent'});
-% ask user to chose what to plot
-dumstr = questdlg('Plot all or just selected condtions/groups?', 'Plot type', 'All', 'Selected', 'Selected');
-plot_type = strmatch(dumstr, {'All', 'Selected'});
+if numel(condition_ids)>1
+    dumstr = questdlg('Are the conditions reflecting repeated measures or independent observation units?', 'Test type', 'Repeated', 'Independent', 'Independent');
+    test_type = strmatch(dumstr, {'Repeated', 'Independent'});
+    % ask user to chose what to plot
+    dumstr = questdlg('Plot all or just selected condtions/groups?', 'Plot type', 'All', 'Selected', 'Selected');
+    plot_type = strmatch(dumstr, {'All', 'Selected'});
+else
+    test_type=0;
+    plot_type=1;
+end
 
 %%% get means, std and normality tests of relevant variables
 gmat = [];
@@ -144,29 +149,29 @@ for c = 1:length(condition_selection);
     netscore_ymat = [netscore_ymat; stats_all.netscore.mat{c}];
     % win stay
     stats_all.WS.mat{c} = WSLS(condition_number(c)==cond_id,1);
-    stats_all.WS.normality(c) = 1-lillietest(stats_all.WS.mat{c});    
-    WS_ymat = [WS_ymat; stats_all.WS.mat{c}]; 
+    stats_all.WS.normality(c) = 1-lillietest(stats_all.WS.mat{c});
+    WS_ymat = [WS_ymat; stats_all.WS.mat{c}];
     % lose shift
     stats_all.LS.mat{c} = WSLS(condition_number(c)==cond_id,2);
-    stats_all.LS.normality(c) = 1-lillietest(stats_all.LS.mat{c});    
-    LS_ymat = [LS_ymat; stats_all.LS.mat{c}]; 
+    stats_all.LS.normality(c) = 1-lillietest(stats_all.LS.mat{c});
+    LS_ymat = [LS_ymat; stats_all.LS.mat{c}];
     % MI successive choices
     stats_all.MI_successive_choices.mat{c} = MI2choices_total(condition_number(c)==cond_id);
-    stats_all.MI_successive_choices.normality(c) = 1-lillietest(stats_all.MI_successive_choices.mat{c});    
-    MI_successive_choices_ymat = [MI_successive_choices_ymat; stats_all.MI_successive_choices.mat{c}]; 
+    stats_all.MI_successive_choices.normality(c) = 1-lillietest(stats_all.MI_successive_choices.mat{c});
+    MI_successive_choices_ymat = [MI_successive_choices_ymat; stats_all.MI_successive_choices.mat{c}];
     % choice entropy total
     stats_all.H_choices.mat{c} = H_total(condition_number(c)==cond_id);
-    stats_all.H_choices.normality(c) = 1-lillietest(stats_all.H_choices.mat{c});    
-    H_choices_ymat = [H_choices_ymat; stats_all.H_choices.mat{c}]; 
+    stats_all.H_choices.normality(c) = 1-lillietest(stats_all.H_choices.mat{c});
+    H_choices_ymat = [H_choices_ymat; stats_all.H_choices.mat{c}];
     % directed exploration 3
     stats_all.DE3.mat{c} = nanmean(directed_exploration3(condition_number(c)==cond_id,:),2);
-    stats_all.DE4.normality(c) = 1-lillietest(stats_all.DE3.mat{c});    
-    DE3_ymat = [DE3_ymat; stats_all.DE3.mat{c}]; 
+    stats_all.DE4.normality(c) = 1-lillietest(stats_all.DE3.mat{c});
+    DE3_ymat = [DE3_ymat; stats_all.DE3.mat{c}];
     % directed exploration 4
     stats_all.DE4.mat{c} = nanmean(directed_exploration4(condition_number(c)==cond_id,:),2);
-    stats_all.DE4.normality(c) = 1-lillietest(stats_all.DE4.mat{c});    
-    DE4_ymat = [DE4_ymat; stats_all.DE4.mat{c}]; 
-
+    stats_all.DE4.normality(c) = 1-lillietest(stats_all.DE4.mat{c});
+    DE4_ymat = [DE4_ymat; stats_all.DE4.mat{c}];
+    
 end
 stats_all.gmat = gmat;
 stats_all.netscore.means = meanbycond(netscore_ymat, gmat,[]);
@@ -204,29 +209,23 @@ if test_type==2
         [~, stats_all.WS.param_p, stats_all.WS.param_stats] = ttest2(WS_ymat(gmat==1),WS_ymat(gmat==2));
         % LS
         [stats_all.LS.nonparam_p, ~, stats_all.LS.nonparam_stats] = ranksum(LS_ymat(gmat==1),LS_ymat(gmat==2));
-        [~, stats_all.LS.param_p,  ~, stats_all.LS.param_stats] = ttest2(LS_ymat(gmat==1),LS_ymat(gmat==2)); 
+        [~, stats_all.LS.param_p,  ~, stats_all.LS.param_stats] = ttest2(LS_ymat(gmat==1),LS_ymat(gmat==2));
         % MI_successive_choices
         [stats_all.MI_successive_choices.nonparam_p, ~, stats_all.MI_successive_choices.nonparam_stats] = ranksum(MI_successive_choices_ymat(gmat==1),MI_successive_choices_ymat(gmat==2));
-        [~, stats_all.MI_successive_choices.param_p, ~,  stats_all.MI_successive_choices.param_stats] = ttest2(MI_successive_choices_ymat(gmat==1),MI_successive_choices_ymat(gmat==2)); 
+        [~, stats_all.MI_successive_choices.param_p, ~,  stats_all.MI_successive_choices.param_stats] = ttest2(MI_successive_choices_ymat(gmat==1),MI_successive_choices_ymat(gmat==2));
         % H_choices
         [stats_all.H_choices.nonparam_p, ~, stats_all.H_choices.nonparam_stats] = ranksum(H_choices_ymat(gmat==1),H_choices_ymat(gmat==2));
-        [~, stats_all.H_choices.param_p, ~,  stats_all.H_choices.param_stats] = ttest2(H_choices_ymat(gmat==1),H_choices_ymat(gmat==2)); 
+        [~, stats_all.H_choices.param_p, ~,  stats_all.H_choices.param_stats] = ttest2(H_choices_ymat(gmat==1),H_choices_ymat(gmat==2));
         % DE3
         [stats_all.DE3.nonparam_p, ~, stats_all.DE3.nonparam_stats] = ranksum(DE3_ymat(gmat==1),DE3_ymat(gmat==2));
-        [~, stats_all.DE3.param_p, stats_all.DE3.param_stats] = ttest2(DE3_ymat(gmat==1),DE3_ymat(gmat==2)); 
+        [~, stats_all.DE3.param_p, stats_all.DE3.param_stats] = ttest2(DE3_ymat(gmat==1),DE3_ymat(gmat==2));
         % DE4
         [stats_all.DE4.nonparam_p, ~, stats_all.DE4.nonparam_stats] = ranksum(DE4_ymat(gmat==1),DE4_ymat(gmat==2));
-        [~, stats_all.DE4.param_p, ~, stats_all.DE4.param_stats] = ttest2(DE4_ymat(gmat==1),DE4_ymat(gmat==2));                            
-    else
+        [~, stats_all.DE4.param_p, ~, stats_all.DE4.param_stats] = ttest2(DE4_ymat(gmat==1),DE4_ymat(gmat==2));
+    elseif length(condition_number)>2
         % netscore
         [stats_all.netscore.param_p, stats_all.netscore.param_table, stats_all.netscore.stats] = anova1(netscore_ymat, gmat, 'off');
-       if test_type==2
-    stats_all.nonparam_tests = 'Wilcoxon unpaired (2 groups) or Kruskall-Wallis (>2 groups)';
-    stats_all.param_tests = 't-test unpaired (2 groups) or anova1 (>2 groups)';
-else
-    stats_all.netscore.nonparam_tests = 'Wilcoxon paired (2 groups) or Friedmann (>2 groups)';
-    stats_all.netscore.param_tests = 't-test paired (2 groups) or repeated measure ANOVA (>2 groups)';
-end [stats_all.netscore.nonparam_p,  stats_all.netscore.nonparam_table, stats_all.netscore.nonparam_stats] = kruskalwallis(netscore_ymat, gmat, 'off');
+        [stats_all.netscore.nonparam_p,  stats_all.netscore.nonparam_table, stats_all.netscore.nonparam_stats] = kruskalwallis(netscore_ymat, gmat, 'off');
         % WS
         [stats_all.WS.param_p, stats_all.WS.param_table, stats_all.WS.stats] = anova1(WS_ymat, gmat, 'off');
         [stats_all.WS.nonparam_p,  stats_all.WS.nonparam_table, stats_all.WS.nonparam_stats] = kruskalwallis(WS_ymat, gmat, 'off');
@@ -244,7 +243,9 @@ end [stats_all.netscore.nonparam_p,  stats_all.netscore.nonparam_table, stats_al
         [stats_all.DE3.nonparam_p,  stats_all.DE3.nonparam_table, stats_all.DE3.nonparam_stats] = kruskalwallis(DE3_ymat, gmat, 'off');
         % DE4
         [stats_all.DE4.param_p, stats_all.DE4.param_table, stats_all.DE4.stats] = anova1(DE4_ymat, gmat, 'off');
-        [stats_all.DE4.nonparam_p,  stats_all.DE4.nonparam_table, stats_all.DE4.nonparam_stats] = kruskalwallis(DE4_ymat, gmat, 'off');                                                           
+        [stats_all.DE4.nonparam_p,  stats_all.DE4.nonparam_table, stats_all.DE4.nonparam_stats] = kruskalwallis(DE4_ymat, gmat, 'off');
+    else
+        warning('No statistics computed: only one group or condition was defined!');
     end
 else
     if length(condition_number)==2
@@ -257,43 +258,54 @@ else
         % LS
         [stats_all.LS.nonparam_p, ~, stats_all.LS.nonparam_stats] = signrank(LS_ymat(gmat==1),LS_ymat(gmat==2));
         [~, stats_all.LS.param_p, stats_all.LS.param_stats] = ttest(LS_ymat(gmat==1),LS_ymat(gmat==2));
-         % MI_successive_choices
+        % MI_successive_choices
         [stats_all.MI_successive_choices.nonparam_p, ~, stats_all.MI_successive_choices.nonparam_stats] = signrank(MI_successive_choices_ymat(gmat==1),MI_successive_choices_ymat(gmat==2));
         [~, stats_all.MI_successive_choices.param_p, stats_all.MI_successive_choices.param_stats] = ttest(MI_successive_choices_ymat(gmat==1),MI_successive_choices_ymat(gmat==2));
-         % H_choices
+        % H_choices
         [stats_all.H_choices.nonparam_p, ~, stats_all.H_choices.nonparam_stats] = signrank(H_choices_ymat(gmat==1),H_choices_ymat(gmat==2));
         [~, stats_all.H_choices.param_p, stats_all.H_choices.param_stats] = ttest(H_choices_ymat(gmat==1), H_choices_ymat(gmat==2));
-         % DE3
+        % DE3
         [stats_all.DE3.nonparam_p, ~, stats_all.DE3.nonparam_stats] = signrank(DE3_ymat(gmat==1),DE3_ymat(gmat==2));
         [~, stats_all.DE3.param_p, stats_all.DE3.param_stats] = ttest(DE3_ymat(gmat==1), DE3_ymat(gmat==2));
-         % DE4
+        % DE4
         [stats_all.DE4.nonparam_p, ~, stats_all.DE4.nonparam_stats] = signrank(DE4_ymat(gmat==1),DE4_ymat(gmat==2));
-        [~, stats_all.DE4.param_p, stats_all.DE4.param_stats] = ttest(DE4_ymat(gmat==1), DE4_ymat(gmat==2));                                                                    
-    else
+        [~, stats_all.DE4.param_p, stats_all.DE4.param_stats] = ttest(DE4_ymat(gmat==1), DE4_ymat(gmat==2));
+    elseif length(condition_number)>2
         % netscore
-        [stats_all.netscore.param_p, stats_all.netscore.param_table] = anova_rm(cell2mat(stats_all.netscore.mat{c}), 'off');
-        [stats_all.netscore.nonparam_p, stats_all.netscore.nonparam_table, stats_all.netscore.nonparam_stats] = friedman(cell2mat(stats_all.netscore.mat{c}));   
+        [stats_all.netscore.param_p, stats_all.netscore.param_table] = anova_rm(cell2mat(stats_all.netscore.mat), 'off');
+        [stats_all.netscore.nonparam_p, stats_all.netscore.nonparam_table, stats_all.netscore.nonparam_stats] = friedman(cell2mat(stats_all.netscore.mat{c}));
         % WS
-        [stats_all.WS.param_p, stats_all.WS.param_table] = anova_rm(cell2mat(stats_all.WS.mat{c}), 'off');
-        [stats_all.WS.nonparam_p, stats_all.WS.nonparam_table, stats_all.WS.nonparam_stats] = friedman(cell2mat(stats_all.WS.mat{c}));   
+        [stats_all.WS.param_p, stats_all.WS.param_table] = anova_rm(cell2mat(stats_all.WS.mat), 'off');
+        [stats_all.WS.nonparam_p, stats_all.WS.nonparam_table, stats_all.WS.nonparam_stats] = friedman(cell2mat(stats_all.WS.mat{c}));
         % LS
-        [stats_all.LS.param_p, stats_all.LS.param_table] = anova_rm(cell2mat(stats_all.LS.mat{c}), 'off');
-        [stats_all.LS.nonparam_p, stats_all.LS.nonparam_table, stats_all.LS.nonparam_stats] = friedman(cell2mat(stats_all.LS.mat{c}));   
+        [stats_all.LS.param_p, stats_all.LS.param_table] = anova_rm(cell2mat(stats_all.LS.mat), 'off');
+        [stats_all.LS.nonparam_p, stats_all.LS.nonparam_table, stats_all.LS.nonparam_stats] = friedman(cell2mat(stats_all.LS.mat{c}));
         % MI_successive_choices
-        [stats_all.MI_successive_choices.param_p, stats_all.MI_successive_choices.param_table] = anova_rm(cell2mat(stats_all.MI_successive_choices.mat{c}), 'off');
-        [stats_all.MI_successive_choices.nonparam_p, stats_all.MI_successive_choices.nonparam_table, stats_all.MI_successive_choices.nonparam_stats] = friedman(cell2mat(stats_all.MI_successive_choices.mat{c}));   
+        [stats_all.MI_successive_choices.param_p, stats_all.MI_successive_choices.param_table] = anova_rm(cell2mat(stats_all.MI_successive_choices.mat), 'off');
+        [stats_all.MI_successive_choices.nonparam_p, stats_all.MI_successive_choices.nonparam_table, stats_all.MI_successive_choices.nonparam_stats] = friedman(cell2mat(stats_all.MI_successive_choices.mat{c}));
         % H_choices
         [stats_all.H_choices.param_p, stats_all.H_choices.param_table] = anova_rm(cell2mat(stats_all.H_choices.mat{c}), 'off');
-        [stats_all.H_choices.nonparam_p, stats_all.H_choices.nonparam_table, stats_all.H_choices.nonparam_stats] = friedman(cell2mat(stats_all.H_choices.mat{c}));   
+        [stats_all.H_choices.nonparam_p, stats_all.H_choices.nonparam_table, stats_all.H_choices.nonparam_stats] = friedman(cell2mat(stats_all.H_choices.mat));
         % DE3
         [stats_all.DE3.param_p, stats_all.DE3.param_table] = anova_rm(cell2mat(stats_all.DE3.mat{c}), 'off');
-        [stats_all.DE3.nonparam_p, stats_all.DE3.nonparam_table, stats_all.DE3.nonparam_stats] = friedman(cell2mat(stats_all.DE3.mat{c}));   
+        [stats_all.DE3.nonparam_p, stats_all.DE3.nonparam_table, stats_all.DE3.nonparam_stats] = friedman(cell2mat(stats_all.DE3.mat));
         % DE4
         [stats_all.DE4.param_p, stats_all.DE4.param_table] = anova_rm(cell2mat(stats_all.DE4.mat{c}), 'off');
-        [stats_all.DE4.nonparam_p, stats_all.DE4.nonparam_table, stats_all.DE4.nonparam_stats] = friedman(cell2mat(stats_all.DE4.mat{c}));                                                                                  
+        [stats_all.DE4.nonparam_p, stats_all.DE4.nonparam_table, stats_all.DE4.nonparam_stats] = friedman(cell2mat(stats_all.DE4.mat));
+    else
+        warning('No statistics computed: only one group or condition was defined!');
     end
 end
-            
+
+% log test type
+if test_type==2
+    stats_all.nonparam_tests = 'Wilcoxon unpaired (2 groups) or Kruskall-Wallis (>2 groups)';
+    stats_all.param_tests = 't-test unpaired (2 groups) or anova1 (>2 groups)';
+else
+    stats_all.netscore.nonparam_tests = 'Wilcoxon paired (2 groups) or Friedmann (>2 groups)';
+    stats_all.netscore.param_tests = 't-test paired (2 groups) or repeated measure ANOVA (>2 groups)';
+end
+
 %% plot and perform statistical test on NET scores
 % in time
 figure('Name', 'Net Score','units','normalized','position',[0 0 .45 .45]);
@@ -305,8 +317,8 @@ if plot_type==1
     g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
-end 
+    g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
+end
 g(1,1).stat_summary('type', 'sem', 'geom', 'area', 'setylim', true);
 g(1,1).set_title('NET score in time');
 g(1,1).set_names('x', 'trial', 'y', 'NET score');
@@ -319,8 +331,8 @@ if plot_type==1
     g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
-end 
+    g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
+end
 g(2,1).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
 g(2,1).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
 g(2,1).axe_property('Xlim', [min(x)-1 max(x)+1]); ;
@@ -342,7 +354,7 @@ if plot_type==1
     g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
+    g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
 g(1,1).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
 g(1,1).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
@@ -358,7 +370,7 @@ if plot_type==1
     g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
+    g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
 g(1,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
 g(1,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
@@ -374,7 +386,7 @@ if plot_type==1
     g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
+    g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
 g(2,1).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
 g(2,1).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
@@ -390,7 +402,7 @@ if plot_type==1
     g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
+    g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
 g(2,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
 g(2,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
@@ -412,7 +424,7 @@ if plot_type==1
     g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
+    g(1,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
 g(1,1).stat_summary('type', 'sem', 'geom', 'area', 'setylim', true);
 g(1,1).set_title('DE3 in time');
@@ -427,11 +439,11 @@ if plot_type==1
     g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
+    g(1,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
 g(1,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
 g(1,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
-g(1,2).axe_property('Xlim', [min(x)-1 max(x)+1]); 
+g(1,2).axe_property('Xlim', [min(x)-1 max(x)+1]);
 g(1,2).set_title('DE3 average');
 g(1,2).set_names('x', 'group', 'y', 'frequency');
 g(1,2).set_color_options('map', colormap_custom);
@@ -444,7 +456,7 @@ if plot_type==1
     g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
+    g(2,1) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
 g(2,1).stat_smooth();%'type', 'sem', 'geom', 'area', 'setylim', true);
 g(2,1).set_title('DE4 in time');
@@ -460,11 +472,11 @@ if plot_type==1
     g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:));
 else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
-    g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));   
+    g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
 g(2,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
 g(2,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
-g(2,2).axe_property('Xlim', [min(x)-1 max(x)+1]); 
+g(2,2).axe_property('Xlim', [min(x)-1 max(x)+1]);
 g(2,2).set_title('DE4 average');
 g(2,2).set_names('x', 'group', 'y', 'frequency');
 g(2,2).set_color_options('map', colormap_custom);

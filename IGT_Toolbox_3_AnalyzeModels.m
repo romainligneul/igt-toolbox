@@ -74,7 +74,7 @@ for m = 1:size(model_list,1)
     keep_param = [keep_param R.theta R.phi nan(size(R.theta,1),1)];
     keep_param_names = [keep_param_names repmat([A.fit.options.inF.param_name A.fit.options.inG.param_name {'NULL'}], size(R.theta,1),1)];
     keep_model_names = [keep_model_names repmat(model_short_name(m), size(R.theta,1),size(R.theta,2)+size(R.phi,2)) repmat({'NULL'},size(R.theta,1),1)];
-
+    
     % test effects on parameters
     if m==1 % we don't need to repeat this for each model
         % test effects on parameters
@@ -86,23 +86,20 @@ for m = 1:size(model_list,1)
         condition_ids = cellstr(char(condition_list(condition_selection)));
         condition_number = condition_number(condition_selection);
         % ask user to define test type
-        dumstr = questdlg('Are the conditions reflecting repeated measures or independent observation units?', 'Test type', 'Repeated', 'Independent', 'Independent');
-        test_type = strmatch(dumstr, {'Repeated', 'Independent'});
-        % ask user to chose what to plot
-        dumstr = questdlg('Plot all or just selected condtions/groups?', 'Plot type', 'All', 'Selected', 'Selected');
-        plot_type = strmatch(dumstr, {'All', 'Selected'});
-        
-        %         condition_list = cellstr(num2str(unique(A.fit.condition)));
-        %         % select conditions to use for the comparison (and plot)
-        %         condition_selection = listdlg('PromptString', 'Select the conditions you want to include in the analysis:', ...
-        %             'ListString', condition_list, 'ListSize', [300 200]);
-        %         condition_ids = str2num(char(condition_list(condition_selection)));
-        %         dumstr = questdlg('Are the conditions reflecting repeated measures or independent observation units?', 'Test type', 'Repeated', 'Independent', 'Independent');
-        %         test_type = strmatch(dumstr, {'Repeated', 'Independent'});
+        if numel(condition_ids)>1
+            dumstr = questdlg('Are the conditions reflecting repeated measures or independent observation units?', 'Test type', 'Repeated', 'Independent', 'Independent');
+            test_type = strmatch(dumstr, {'Repeated', 'Independent'});
+            % ask user to chose what to plot
+            dumstr = questdlg('Plot all or just selected condtions/groups?', 'Plot type', 'All', 'Selected', 'Selected');
+            plot_type = strmatch(dumstr, {'All', 'Selected'});
+        else
+            test_type = 0;
+            plot_type = 1;
+        end
     end
     
     keep_conditions = [keep_conditions repmat(A.fit.condition, 1,size(R.theta,2)+size(R.phi,2)+1)];
-
+    
     % parameter analysis / evolution
     for t = 1:size(R.theta,2)
         stats_theta{m,t}.param_name = A.fit.options.inF.param_name{t};
@@ -119,32 +116,34 @@ for m = 1:size(model_list,1)
         end
         stats_theta{m,t}.means = meanbycond(ymat, gmat,[]);
         stats_theta{m,t}.stds = stdbycond(ymat, gmat,[]);
-
+        
         if length(test_mat)==2
             if test_type==2;
                 [stats_theta{m,t}.nonparam_p, ~, stats_theta{m,t}.nonparam_stats] = ranksum(test_mat{1}, test_mat{2});
                 [~, stats_theta{m,t}.param_p, stats_theta{m,t}.param_stats] = ttest2(test_mat{1}, test_mat{2});
                 stats_theta{m,t}.nonparam_test = 'Wilcoxon unpaired';
-                stats_theta{m,t}.param_test = 't-test unpaired';   
+                stats_theta{m,t}.param_test = 't-test unpaired';
             else
-                [stats_theta{m,t}.param_p, stats_theta{m,t}.param_table, stats_theta{m,t}.stats] = anova1(ymat, gmat, 'off');                
-                [stats_theta{m,t}.nonparam_p, stats_theta{m,t}.nonparam_table, stats_theta{m,t}.nonparam_stats] = kruskalwallis(ymat, gmat, 'off');   
+                [stats_theta{m,t}.param_p, stats_theta{m,t}.param_table, stats_theta{m,t}.stats] = anova1(ymat, gmat, 'off');
+                [stats_theta{m,t}.nonparam_p, stats_theta{m,t}.nonparam_table, stats_theta{m,t}.nonparam_stats] = kruskalwallis(ymat, gmat, 'off');
                 stats_theta{m,t}.nonparam_test = 'kruskalwallis';
-                stats_theta{m,t}.param_test = 'anova1';                
+                stats_theta{m,t}.param_test = 'anova1';
             end
-        else
+        elseif length(test_mat)>2
             if test_type==2;
                 [stats_theta{m,t}.nonparam_p, ~, stats_theta{m,t}.nonparam_stats] = signrank(test_mat{1}, test_mat{2});
                 [~, stats_theta{m,t}.param_p, stats_theta{m,t}.param_stats] = ttest(test_mat{1}, test_mat{2});
                 stats_theta{m,t}.nonparam_test = 'Wilcoxon paired';
-                stats_theta{m,t}.param_test = 't-test paired';   
+                stats_theta{m,t}.param_test = 't-test paired';
             else
-                [stats_theta{m,t}.param_p, stats_theta{m,t}.param_table] = anova_rm(cell2mat(test_mat), 'off');                
-                [stats_theta{m,t}.nonparam_p, stats_theta{m,t}.nonparam_table, stats_theta{m,t}.nonparam_stats] = friedman(cell2mat(test_mat));  
+                [stats_theta{m,t}.param_p, stats_theta{m,t}.param_table] = anova_rm(cell2mat(test_mat), 'off');
+                [stats_theta{m,t}.nonparam_p, stats_theta{m,t}.nonparam_table, stats_theta{m,t}.nonparam_stats] = friedman(cell2mat(test_mat));
                 stats_theta{m,t}.nonparam_test = 'kruskalwallis';
-                stats_theta{m,t}.param_test = 'anova1';   
+                stats_theta{m,t}.param_test = 'anova1';
                 
             end
+        else
+            warning('No statistics computed: only one group or condition was defined!');
         end
         try
             theta_fitsim{m}{t}(:,1) = R.theta(:,t);
@@ -153,7 +152,7 @@ for m = 1:size(model_list,1)
             warning('It seems that theta parameters recovered from simulation are lacking')
         end
     end
-        
+    
     % parameter analysis / observation
     for p = 1:size(R.phi,2)
         % try to compute correlation between recovered and fitted parameters
@@ -171,43 +170,45 @@ for m = 1:size(model_list,1)
         end
         stats_phi{m,p}.means = meanbycond(ymat, gmat,[]);
         stats_phi{m,p}.stds = stdbycond(ymat, gmat,[]);
-
+        
         if length(test_mat)==2
             if test_type==2;
                 [stats_phi{m,p}.nonparam_p, ~, stats_phi{m,p}.nonparam_stats] = ranksum(test_mat{1}, test_mat{2});
                 [~, stats_phi{m,p}.param_p, stats_phi{m,p}.param_stats] = ttest2(test_mat{1}, test_mat{2});
                 stats_phi{m,p}.nonparam_test = 'Wilcoxon unpaired';
-                stats_phi{m,p}.param_test = 't-test unpaired';   
+                stats_phi{m,p}.param_test = 't-test unpaired';
             else
-                [stats_phi{m,p}.param_p, stats_phi{m,p}.param_table, stats_phi{m,p}.stats] = anova1(ymat, gmat, 'off');                
-                [stats_phi{m,p}.nonparam_p, stats_phi{m,p}.nonparam_table, stats_phi{m,p}.nonparam_stats] = kruskalwallis(ymat, gmat, 'off');   
+                [stats_phi{m,p}.param_p, stats_phi{m,p}.param_table, stats_phi{m,p}.stats] = anova1(ymat, gmat, 'off');
+                [stats_phi{m,p}.nonparam_p, stats_phi{m,p}.nonparam_table, stats_phi{m,p}.nonparam_stats] = kruskalwallis(ymat, gmat, 'off');
                 stats_phi{m,p}.nonparam_test = 'kruskalwallis';
                 stats_phi{m,p}.param_test = 'anova1';
             end
-        else
+        elseif length(test_mat)>2
             if test_type==2;
                 [stats_phi{m,p}.nonparam_p, ~, stats_phi{m,p}.nonparam_stats] = signrank(test_mat{1}, test_mat{2});
                 [~, stats_phi{m,p}.param_p, stats_phi{m,p}.param_stats] = ttest(test_mat{1}, test_mat{2});
                 stats_phi{m,p}.nonparam_test = 'Wilcoxon paired';
-                stats_phi{m,p}.param_test = 't-test paired';   
+                stats_phi{m,p}.param_test = 't-test paired';
             else
-                [stats_phi{m,p}.param_p, stats_phi{m,p}.param_table] = anova_rm(cell2mat(test_mat), 'off');                
-                [stats_phi{m,p}.nonparam_p, stats_phi{m,p}.nonparam_table, stats_phi{m,p}.nonparam_stats] = friedman(cell2mat(test_mat));  
+                [stats_phi{m,p}.param_p, stats_phi{m,p}.param_table] = anova_rm(cell2mat(test_mat), 'off');
+                [stats_phi{m,p}.nonparam_p, stats_phi{m,p}.nonparam_table, stats_phi{m,p}.nonparam_stats] = friedman(cell2mat(test_mat));
                 stats_phi{m,p}.nonparam_test = 'kruskalwallis';
-                stats_phi{m,p}.param_test = 'anova1';   
+                stats_phi{m,p}.param_test = 'anova1';
                 
             end
+        else
+            warning('No statistics computed: only one group or condition was defined!');
         end
         try
             phi_fitsim{m}{p}(:,1) = R.phi(:,p);
             phi_fitsim{m}{p}(:,2) = R.simulation.phi_recovered(:,p);
         catch
             warning('It seems that phi parameters recovered from simulation are lacking')
-        end        
+        end
     end
     
     cross_corr{m,1} = corr([R.theta R.phi],'type', 'Spearman');
-
+    
 end
 
 figure('Name', 'Cross correlation of all parameters');

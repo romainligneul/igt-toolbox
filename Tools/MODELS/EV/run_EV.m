@@ -1,5 +1,5 @@
 function [A R] = run_EV(A, data)
-%%%% PVL model / Evolution function
+%%%% EV model / Evolution function
 % This model is well described in Steingroever, Wetzels, Wagenmakers 2016
 % 'Bayes Factors for Reinforcement-Learning Models of the IowaGambling Task'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
