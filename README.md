@@ -3,10 +3,10 @@
 The purpose of the igt-toolbox is to facilitate the analysis/reanalysis of data from the standard version of the [Iowa Gambling Task](https://en.wikipedia.org/wiki/Iowa_gambling_task).
 
 Before discussing the specificities of the toolbox, it must be noted that the toolbox relies heavily on two excellent and well-documented Matlab packages:
-1. The [VBA toolbox](https://mbb-team.github.io/VBA-toolbox/) developed by Jean Daunizeau and Lionel Rigoux. Indeed, almost all model fitting and model comparison procedures included in the igt-toolbox depend on VBA (for Variational Bayes Analysis).
-2. [Gramm](https://github.com/piermorel/gramm) developed by Pierre Morel. Almost all data visualization procedures depends on Gramm.
+1. The [VBA toolbox](https://mbb-team.github.io/VBA-toolbox/) developed by Jean Daunizeau and Lionel Rigoux. Almost all model fitting and model comparison procedures included in the igt-toolbox depend on VBA (for Variational Bayes Analysis).
+2. [Gramm](https://github.com/piermorel/gramm) developed by Pierre Morel. Many data visualization procedures depends on Gramm.
 
-Note that these two resources are included in the igt-toolbox itself. However, it can be a good idea to update them from time to time. If they are already in your Matlab path, you can remove their respective folders from Tools/VBA and Tools/OTHERS/gramm-master
+Note that these two resources are included in the igt-toolbox itself. However, it can be a good idea to update them from time to time. Alternatively, if they are already in your Matlab path, you can delete their respective folders (i.e Tools/VBA and Tools/OTHERS/gramm-master)
 
 Besides citing the original manuscript of the IGT toolbox, please also acknowledge these two tools in your manuscripts:
 
@@ -15,7 +15,7 @@ Besides citing the original manuscript of the IGT toolbox, please also acknowled
 
 ## installation
 
-This toolbox needs Matlab. It was developed and tested on versions 2014b and 2017a, on Windows, but it should work on ealier versions as well.
+This toolbox needs Matlab. It was developed and tested on versions 2014b and 2017a, using Windows, but it should work on ealier versions and other platforms as well.
 
 **Option 1**: clone this repository using the command ```git clone https://github.com/romainligneul/igt-toolbox.git```
 
@@ -195,7 +195,7 @@ Once computations are performed, a series of figures will appear on the screen.
 ![Figure 5](Tools/OTHERS/example_figures/Model_Comparison_FixedEffect.JPG)
 3. A representation of model comparison treated as a random-effect (based on the function VBA_GroupBMC). Top-left panel represents the log-model evidences (based either on AIC, BIC or Free Energy) per subject per model. Top-right panel represents the probability of each model being the correct one, per subject. Bottom-left panel represents the exceedance probability that a given model is the most frequent within the population under scrutiny. Bottom-right panel represents the estimated frequencies of each model at the group level. NB: a separate figure is generated for each goodness of fit metric (i.e BIC, AIC, Free Energy). All information about Bayesian Model Comparison can be found in the structure **post_F**, **out_F**, **post_BIC**, **out_BIC**, **post_AIC** and **out_AIC**.
 ![Figure 6](Tools/OTHERS/example_figures/Model_Comparison_RandomEffect_F.JPG)
-4. A representation of the mean +/- sem value of all parameters of a given model. The color code correspond to the group/condition which have been selected for analysis. NB: a separate figure is generated for each model. All means, SD, recovery values and statistical tests related to models' parameters can be found in the structures **stats_theta** (for parameters of the evolution functions) and **stats_phi** (for parameters of the observation functions)
+4. A representation of the mean +/- sem value of all parameters of a given model. The color code correspond to the group/condition which have been selected for analysis. NB: a separate figure is generated for each model (here, Expected Valence). All means, SD, recovery values and statistical tests related to models' parameters can be found in the structures **stats_theta** (for parameters of the evolution functions) and **stats_phi** (for parameters of the observation functions)
 ![Figure 7](Tools/OTHERS/example_figures/Model_parameter_EV.JPG)
 5. A graphical representation of parameter recovery. The dashed line represents the perfect equivalence between actual parameters (in x, obtained by fitting the real dataset) and recovered parameters (in y, obtained by fitting the simulated dataset). Actual and recovered parameters for each individual can be found in the structures **theta_fitsim** and **phi_fitsim** (first column: actual parameters)
 ![Figure 8](Tools/OTHERS/example_figures/Parameter_recovery.JPG)

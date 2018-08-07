@@ -1,0 +1,165 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                             IGT TOOLBOX                                 %
+%  Once the data has been formatted correctly, this script is the only    %
+%  one which need to be launched in order to fit reinforcement-learning   %
+%  models to IGT data. All steps and options are extensively commented.   %
+%                                                                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Romain Ligneul. 02/2017. romain.ligneul@gmail.com
+clear all;close all;
+addpath(genpath('Tools/VBA'));
+
+%% Data to be used
+% in order to regenerate the dataset of the 504 subjects open dataset,
+% indicate: load('IGTdata/opendata_1/opendata504subjects.mat');
+% otherwise you can easily use your own dataset, provided that it is 
+% formatted correctly.
+% If you have different groups define carefully data{}.cond and
+% data{}.cond_label, as those will be used automatically in the next step
+load('IGTdata/toydata_5subjects/IGTdata.mat');
+
+%% General settings
+% In theory, this section of the script is the only one that users
+% unexperienced with computational modeling will modify.
+
+% 1) Models that the toolbox is going to fit to your data
+A.fit.models = {@run_EV, @run_EXPLORE, @run_PVL, @run_PVLdelta, @run_VPP};
+
+% 2) Output_name (determines directory in which output of the fit is
+% written
+A.output_name = 'toydata_5subjects_flat';
+
+% 3) Should the toolbox save all the information (can be >100mb per model)
+% or just a summary? yes = 1 / no = 0
+A.complete_save = 1;
+
+% 4) Should the toolbox also simulate the models and perform parameter
+% recovery? The recovery strategy consist in simulating all subjects based
+% on the estimated parameters and check whether the algorithm  retrieve
+% similar values. 
+% estimate = 0, estimate & recover = 1
+A.simulate_and_recover = 1;
+
+% 5) Should program use grid-computing? (qsub method / linux)
+A.cluster_run = 0;
+
+% 6) Types of priors to be used: 'informed','flat' or 'shrinkage'
+% 'informed' priors are based on the distributions of parameters obtained
+% from a open dataset of 504 subjects. 
+% 'flat' priors correspond to approximate uniform distributions
+% 'shrinkage' priors correspond to priors of mean 0 and variance 1.
+% It is good practice to compare the results obtained with each
+% method. Note that 'informed' priors are based on the parameter distributions
+% obtained by fitting the models to the open dataset of 504 subjects.
+% Using them will diminish the risk of aberrant fit, but it may also
+% reduce the ability to detect inter-individual differences.
+A.fit.priors.type = 'flat';
+
+%% Specific settings
+% These settings offer more flexibility in the analysis.
+
+% 1) Maximal number of subject on which the fit should be performed. Can be
+% useful to use a small number (e.g 5) to check if everything works fine.
+% However, in order to run the script IGT_Toobox_3_AnalyzeModels, you will
+% need to analyze your whole dataset. 
+A.fit.maxsubjects = 1000;
+
+% 2) Number of trials in the version of the IGT tested. The standard
+% version of the IGT has 100 trials, but some modified versions have 150 or
+% 200.
+A.fit.ntrials = 100;
+
+% 3) It is common practice to divide feedbacks by 100 before fitting the
+% IGT data. All results in Ligneul & Sescousse 2018 have been generated
+% using such transform.
+A.fit.divide_feeback = 100;
+
+% 4) If you don't want to use the VBA toolbox or if you want to
+% double-check your main results using a simpler gradient descent
+% algorithm, you can set the option below to 1. In this case, the Matlab
+% fminunc will be used (see Tools/OTHERS/VBA_fminunc_wrapper.m for more
+% details). You can define the number of random initialization points (i.e
+% initial parameters drawn randomly from their prior distributions) with
+% the following line (nb. this parameter has a dramatic impact on
+% computational time).
+A.fit.fminunc = 0;
+A.fit.options.fminunc_n_init_random = 20; 
+
+%% options for the vba toolbox
+% See VBA documentation for more information about the following options.
+A.fit.options.updateX0 = 0; 
+A.fit.options.binomial = 2;
+A.fit.options.DisplayWin = 0; 
+A.fit.options.MaxIter = 100;
+A.fit.options.GnMaxIter = 500;
+A.fit.options.TolFun  = 1e-4;
+
+%% Add dependencies to Matlab path
+% Model fitting and model comparison are performed using the VBA package
+% described in Rigoux & Daunizeau, Plos Comp. Biol. 2014.
+% https://mbb-team.grun_EVithub.io/VBA-toolbox/
+% Most technical questions concerning the model fitting and model
+% comparison proceTsigMin5to5dures can be solved by consulting the VBA website and the
+% manual of the VBA toolbox.
+% Models themselves are contained in decidated folders, and consist in a
+% parametrized launcher script as well as an evolution and an observation
+% function.
+addpath(genpath([pwd '/Tools/VBA/']));
+addpath(genpath([pwd '/Tools/MODELS/']));
+addpath(genpath([pwd '/Tools/OTHERS/']));
+% manage directories
+A.main_path = pwd;
+A.output.dir = [A.main_path '/IGTmodelfit/' A.output_name '/'];
+mkdir(A.output.dir);
+
+%% load data and build the input structure
+% The VBA toolbox uses an input structure to give information about the
+% task. One particularity of the VBA toolbox is that the evolution of
+% hidden states precedes the observation made by the experimenter (e.g
+% choice). Therefore, one needs to define a 'null trial' in the first
+% column of the u structure. 
+
+% Additional rows can be defined if necessary.
+for s = 1:length(data)
+    
+    % subject info (numeric or string)
+    try
+        A.fit.subject(s,1) = data{s}.id;
+    catch % if id is string
+        A.fit.subject{s,1} = data{s}.id;
+    end
+    % if available, report condition
+    try
+        A.fit.condition(s,1) = data{s}.cond;
+    end
+    %  inputs
+    A.fit.u{s}(1,:) = 0:A.fit.ntrials-1;                                    % indices of the trials where evolution function should run.
+    A.fit.u{s}(2,:) = [0; data{s}.deck(1:end-1)];                           % previous choice
+    A.fit.u{s}(3,:) = [0; data{s}.win(1:end-1)]/A.fit.divide_feeback;       % previous win
+    A.fit.u{s}(4,:) = abs([0; data{s}.lose(1:end-1)]/A.fit.divide_feeback); % previous lose
+    A.fit.u{s}(5,:) = 1:A.fit.ntrials;                                      % indices of the trials where observation function should run.
+    A.fit.u{s}(6,:) = data{s}.deck;
+    % multinomial observation vector
+    A.fit.y{s} = zeros(4,length(A.fit.u{s}));
+    for t = 1:length(A.fit.u{s})
+        A.fit.y{s}(A.fit.u{s}(6,t),t) = 1;
+    end
+    
+end
+
+%% run the fitting procedure
+% cluster output will only works if you have the qsub functions provided by
+% fieldtrip and a torque-compatible grid computing architecture.
+cluster_ouput = 'torque_output/';
+mkdir(cluster_ouput);
+return_dir = pwd;
+for m = 1:length(A.fit.models)
+   if A.cluster_run ==1
+       try cd(cluster_ouput);end
+       qsubfeval(A.fit.models{m}, A, data, 'memreq', 4*(1024^3), 'timreq', 600*60);
+   else
+       A.fit.models{m}(A,data);
+   end
+end
+cd(return_dir);
