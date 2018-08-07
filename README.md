@@ -15,7 +15,7 @@ Besides citing the original manuscript of the IGT toolbox, please also acknowled
 
 ## installation
 
-This toolbox needs Matlab. It was developed and tested on versions 2014b and 2017a, using Windows, but it should work on ealier versions and other platforms as well.
+This toolbox needs Matlab. It was developed and tested on versions 2014b and 2017a, using Windows and Linux, but it should work on ealier versions and other platforms as well.
 
 **Option 1**: clone this repository using the command ```git clone https://github.com/romainligneul/igt-toolbox.git```
 
@@ -23,7 +23,7 @@ This toolbox needs Matlab. It was developed and tested on versions 2014b and 201
 
 Then, you are ready to go.
 
-## convert your data to the appropriate information
+## convert your data to the appropriate format
 
 The toolbox requires that IGTdata is converted in a Matlab structure of the following form, 1 being the id number of a given subject:
 
