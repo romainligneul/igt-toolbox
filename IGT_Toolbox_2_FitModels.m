@@ -8,7 +8,7 @@
 %
 % Romain Ligneul. 02/2017. romain.ligneul@gmail.com
 clear all;close all;
-addpath(genpath('Tools/VBA');
+addpath(genpath('Tools/VBA'));
 
 %% Data to be used
 % in order to regenerate the dataset of the 504 subjects open dataset,

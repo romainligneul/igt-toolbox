@@ -125,17 +125,18 @@ for m = 1:size(model_list,1)
                 stats_theta{m,t}.nonparam_test = 'Wilcoxon unpaired';
                 stats_theta{m,t}.param_test = 't-test unpaired';
             else
-                [stats_theta{m,t}.param_p, stats_theta{m,t}.param_table, stats_theta{m,t}.stats] = anova1(ymat, gmat, 'off');
-                [stats_theta{m,t}.nonparam_p, stats_theta{m,t}.nonparam_table, stats_theta{m,t}.nonparam_stats] = kruskalwallis(ymat, gmat, 'off');
-                stats_theta{m,t}.nonparam_test = 'kruskalwallis';
-                stats_theta{m,t}.param_test = 'anova1';
-            end
-        elseif length(test_mat)>2
-            if test_type==2;
                 [stats_theta{m,t}.nonparam_p, ~, stats_theta{m,t}.nonparam_stats] = signrank(test_mat{1}, test_mat{2});
                 [~, stats_theta{m,t}.param_p, stats_theta{m,t}.param_stats] = ttest(test_mat{1}, test_mat{2});
                 stats_theta{m,t}.nonparam_test = 'Wilcoxon paired';
                 stats_theta{m,t}.param_test = 't-test paired';
+                
+            end
+        elseif length(test_mat)>2
+            if test_type==2;
+                [stats_theta{m,t}.param_p, stats_theta{m,t}.param_table, stats_theta{m,t}.stats] = anova1(ymat, gmat, 'off');
+                [stats_theta{m,t}.nonparam_p, stats_theta{m,t}.nonparam_table, stats_theta{m,t}.nonparam_stats] = kruskalwallis(ymat, gmat, 'off');
+                stats_theta{m,t}.nonparam_test = 'kruskalwallis';
+                stats_theta{m,t}.param_test = 'anova1';
             else
                 [stats_theta{m,t}.param_p, stats_theta{m,t}.param_table] = anova_rm(cell2mat(test_mat), 'off');
                 [stats_theta{m,t}.nonparam_p, stats_theta{m,t}.nonparam_table, stats_theta{m,t}.nonparam_stats] = friedman(cell2mat(test_mat));
@@ -179,17 +180,18 @@ for m = 1:size(model_list,1)
                 stats_phi{m,p}.nonparam_test = 'Wilcoxon unpaired';
                 stats_phi{m,p}.param_test = 't-test unpaired';
             else
-                [stats_phi{m,p}.param_p, stats_phi{m,p}.param_table, stats_phi{m,p}.stats] = anova1(ymat, gmat, 'off');
-                [stats_phi{m,p}.nonparam_p, stats_phi{m,p}.nonparam_table, stats_phi{m,p}.nonparam_stats] = kruskalwallis(ymat, gmat, 'off');
-                stats_phi{m,p}.nonparam_test = 'kruskalwallis';
-                stats_phi{m,p}.param_test = 'anova1';
-            end
-        elseif length(test_mat)>2
-            if test_type==2;
                 [stats_phi{m,p}.nonparam_p, ~, stats_phi{m,p}.nonparam_stats] = signrank(test_mat{1}, test_mat{2});
                 [~, stats_phi{m,p}.param_p, stats_phi{m,p}.param_stats] = ttest(test_mat{1}, test_mat{2});
                 stats_phi{m,p}.nonparam_test = 'Wilcoxon paired';
                 stats_phi{m,p}.param_test = 't-test paired';
+                
+            end
+        elseif length(test_mat)>2
+            if test_type==2;
+                [stats_phi{m,p}.param_p, stats_phi{m,p}.param_table, stats_phi{m,p}.stats] = anova1(ymat, gmat, 'off');
+                [stats_phi{m,p}.nonparam_p, stats_phi{m,p}.nonparam_table, stats_phi{m,p}.nonparam_stats] = kruskalwallis(ymat, gmat, 'off');
+                stats_phi{m,p}.nonparam_test = 'kruskalwallis';
+                stats_phi{m,p}.param_test = 'anova1';
             else
                 [stats_phi{m,p}.param_p, stats_phi{m,p}.param_table] = anova_rm(cell2mat(test_mat), 'off');
                 [stats_phi{m,p}.nonparam_p, stats_phi{m,p}.nonparam_table, stats_phi{m,p}.nonparam_stats] = friedman(cell2mat(test_mat));
@@ -222,9 +224,11 @@ set(gca, 'ytick',1:size(keep_param_names,2), 'yticklabel', keep_param_names(1,:)
 figure('Name', 'Goodness of fit against EE / All metrics (');
 dumcheck = strfind(model_list,'EXPLORE'); for d=1:length(dumcheck);if ~isempty(dumcheck{d});EE_ind=d;break;end;end
 diff_metrics = [-2*sum(BIC,2)-(-2*sum(BIC(EE_ind,:),2)), -2*sum(AIC,2)-(-2*sum(AIC(EE_ind,:),2)) -2*sum(F,2)-(-2*sum(F(EE_ind,:),2))];
-metrics = [-2*sum(BIC,2), -2*sum(AIC,2) -2*sum(F,2)];
 bar(diff_metrics);
 set(gca,'xticklabels', model_short_name)
+ylabel('GoF(model)-GoF(EE)')
+legend('BIC', 'AIC', 'F')
+colormap('gray');
 set(gcf, 'color', 'w');
 
 % Metrics used for Bayesian Model Comparison:
@@ -235,13 +239,13 @@ set(gcf, 'color', 'w');
 % complexity). Note that those options are not mutually exclusive.
 options.figName = 'Free energy metric';
 options.modelNames = model_short_name;
-VBA_groupBMC(F,options);
+[post_F, out_F] = VBA_groupBMC(F,options);
 options.figName = 'AIC metric';
 options.modelNames = model_short_name;
-VBA_groupBMC(AIC,options);
+[post_AIC, out_AIC] = VBA_groupBMC(AIC,options);
 options.figName = 'BIC metric';
 options.modelNames = model_short_name;
-VBA_groupBMC(BIC,options);
+[post_BIC, out_BIC] = VBA_groupBMC(BIC,options);
 
 for m=1:length(model_list)
     figure('name', ['Complete overview of parameters for ' model_short_name{m}], 'units','normalized', 'position', [-0.10+m*0.15 0.05 0.45 0.45])
@@ -284,8 +288,8 @@ for m = 1:size(model_list,1)
         col = [col; keep_param_names(:,phi_mapping{m}(p))'];
     end
     g(1,m) = gramm('x',x, 'y',y, 'color',col);
-%    g(1,m).stat_glm('distribution', 'normal', 'geom', 'line');
-     g(1,m).stat_fit('fun', @(a,b,x)b*x+a, 'disp_fit', false, 'geom', 'line', 'fullrange', true);
+    %    g(1,m).stat_glm('distribution', 'normal', 'geom', 'line');
+    g(1,m).stat_fit('fun', @(a,b,x)b*x+a, 'disp_fit', false, 'geom', 'line', 'fullrange', true);
     g(1,m).geom_funline('fun', @(x)x,'style', 'k--');
     g(1,m).axe_property('xlim', [-1 1], 'ylim', [-1 1]);
     g(1,m).set_color_options('map', 'lch');
