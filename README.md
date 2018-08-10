@@ -13,6 +13,8 @@ Besides citing the original manuscript of the IGT toolbox, please also acknowled
 > * J. Daunizeau, V. Adam, L. Rigoux (2014), VBA: a probabilistic treatment of nonlinear models for neurobiological and behavioural data. PLoS Comp Biol 10(1): e1003441.
 > * Morel, (2018). Gramm: grammar of graphics plotting in Matlab. Journal of Open Source Software, 3(23), 568.
 
+**Importantly, this tool is licensed under the GNU General Public License and provided on an "as is" basis, without warranties or conditions of any kind.**
+
 ## installation
 
 This toolbox needs Matlab. It was developed and tested on versions 2014b and 2017a, using Windows and Linux, but it should work on ealier versions and other platforms as well.
