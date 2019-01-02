@@ -1,9 +1,5 @@
 % explore balloon model stability
 
-clear all
-close all
-clc
-
 xg1 = [-5:0.2:5];
 xg2 = xg1;
 n = length(xg1);
@@ -128,7 +124,7 @@ I = reshape(out.suffStat.gx,length(kaf),length(kas));
 
 % display results
 
-hf = figure('color',[1 1 1],'position',[649,40,767,1105],'menubar','none');
+hf = figure('color',[1 1 1],'position',[649,40,767,1105]);
 ha = subplot(3,2,1,'parent',hf);
 hi = imagesc(flipud(lm),'parent',ha);
 xlabel(ha,'x2: blood inflow')

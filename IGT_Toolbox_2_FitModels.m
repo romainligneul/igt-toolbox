@@ -5,64 +5,69 @@
 %  models to IGT data. All steps and options are extensively commented.   %
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Romain Ligneul. 02/2017. romain.ligneul@gmail.com
-clear all;close all;
-addpath(genpath('Tools/VBA'));
-
-%% Data to be used
-% in order to regenerate the dataset of the 504 subjects open dataset,
-% indicate: load('IGTdata/opendata_1/opendata504subjects.mat');
-% otherwise you can easily use your own dataset, provided that it is 
-% formatted correctly.
-% If you have different groups define carefully data{}.cond and
-% data{}.cond_label, as those will be used automatically in the next step
-load('IGTdata/toydata_5subjects/IGTdata.mat');
+% v1.1
+% Romain Ligneul. 
+% 11/2018. romain.ligneul@gmail.com
+clear all;close all; 
 
 %% General settings
 % In theory, this section of the script is the only one that users
 % unexperienced with computational modeling will modify.
 
 % 1) Models that the toolbox is going to fit to your data
-A.fit.models = {@run_EV, @run_EXPLORE, @run_PVL, @run_PVLdelta, @run_VPP};
+A.fit.models = {@run_VSE, @run_PVL, @run_PVLdelta, @run_VPP, @run_VSE_LA, @run_ORL, @run_EV};
 
-% 2) Output_name (determines directory in which output of the fit is
+% 2) Types of priors to be used: 'informed','flat' or 'shrinkage'
+% 'informed' priors are based on the distributions of parameters obtained
+% from a open dataset of 504 subjects. 
+% 'flat' priors correspond to approximate uniform distributions
+% 'shrinkage' priors correspond to priors of mean 0 and variance 1.
+% Although is it good practice to compare the results obtained with each
+% method, 'informed' priors will diminish the risk of aberrant fit.
+A.fit.priors.type = 'flat';
+
+% 3) Should the toolbox perform Bayesian Model Comparison in order to
+% determine which model fits best your data at the end of the analysis
+% yes = 1 / no = 0;
+A.comparison.do = 0;
+
+% 6) Output_name (determines directory in which output of the fit is
 % written
-A.output_name = 'toydata_5subjects_flat';
+A.output_name = 'toydata';
 
-% 3) Should the toolbox save all the information (can be >100mb per model)
+% 6) Should the toolbox save all the information (can be >100mb per model)
 % or just a summary? yes = 1 / no = 0
 A.complete_save = 1;
 
-% 4) Should the toolbox also simulate the models and perform parameter
+% 7) Should the toolbox also simulate the models and perform parameter
 % recovery? The recovery strategy consist in simulating all subjects based
 % on the estimated parameters and check whether the algorithm  retrieve
 % similar values. 
 % estimate = 0, estimate & recover = 1
 A.simulate_and_recover = 1;
 
-% 5) Should program use grid-computing? (qsub method / linux)
-A.cluster_run = 0;
+% 8) Should program use grid-computing? (qsub method / linux)
+A.cluster_run = 1;
 
-% 6) Types of priors to be used: 'informed','flat' or 'shrinkage'
-% 'informed' priors are based on the distributions of parameters obtained
-% from a open dataset of 504 subjects. 
-% 'flat' priors correspond to approximate uniform distributions
-% 'shrinkage' priors correspond to priors of mean 0 and variance 1.
-% It is good practice to compare the results obtained with each
-% method. Note that 'informed' priors are based on the parameter distributions
-% obtained by fitting the models to the open dataset of 504 subjects.
-% Using them will diminish the risk of aberrant fit, but it may also
-% reduce the ability to detect inter-individual differences.
-A.fit.priors.type = 'flat';
+%% Data to be used
+% in order to regenerate the dataset of the 504 subjects open dataset,
+% indicate: load('IGTdata/opendata_1/opendata504subjects.mat');
+% otherwise you can easily use your own dataset, provided that it is 
+% formatted like this one. In the study-specific data folder, you can find
+% example of conversion scripts: 
+% - Ahn 2014 was converted from 1 text file per subject group.
+% - Bravers 2014 was converted from 1 xls file per subject group.
+% - opendata504 was converted from 1 big xls file configured differently
+% If you have different groups define carefully data{}.cond and
+% data{}.cond_label, as those will be used automatically at the end of the
+% analysis. 
+load('IGTdata/toydata/IGTdata.mat');
 
 %% Specific settings
 % These settings offer more flexibility in the analysis.
 
 % 1) Maximal number of subject on which the fit should be performed. Can be
 % useful to use a small number (e.g 5) to check if everything works fine.
-% However, in order to run the script IGT_Toobox_3_AnalyzeModels, you will
-% need to analyze your whole dataset. 
 A.fit.maxsubjects = 1000;
 
 % 2) Number of trials in the version of the IGT tested. The standard
@@ -150,7 +155,7 @@ end
 
 %% run the fitting procedure
 % cluster output will only works if you have the qsub functions provided by
-% fieldtrip and a torque-compatible grid computing architecture.
+%fieldtrip and a torque-compatible grid computing architecture.
 cluster_ouput = 'torque_output/';
 mkdir(cluster_ouput);
 return_dir = pwd;

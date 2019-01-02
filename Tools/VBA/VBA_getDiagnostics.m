@@ -1,34 +1,15 @@
 function [diagnostics,out] = VBA_getDiagnostics(posterior,out)
-% derives post-hoc diagnostics of VBA's model inversion
-% function [diagnostics,out] = VBA_getDiagnostics(posterior,out)
-% Post-hoc diagnostics include: goodness-of-fit metrics, Volterra kernels,
-% null model evidence, posterior entropies, etc...
-% IN:
-%   - posterior,out: VBA's output structures
-% OUT:
-%   - diagnostics: a structure containing the following fields:
-%       .pgx: mean of the prior predictive density
-%       .pvy: variance of the prior predictive density
-%       .kernels: Volterra kernels (if options.kernelSize>0)
-%       .efficiency: posterior entropies
-%       .DKL: prior/posterior Kullback-Leibler divergences
-%       .LLH0: log-evidence of the null model
-%       .MT_x: microtime hidden states time series
-%       .MT_gx: microtime predicted data time series
-%       .microTime: microtime sampling grid
-%       .sampleInd: sub-indexing of the microtime sampling grid
-%       .dy: data residuals structure (e.g., autocorrelation...)
-%       .dx: states innovations structure
-%       .C: posterior correlation matrix
+% this function derives diagnostics of the VBA model inversion
 
 u = out.u;
 y = out.y;
 
-% get goodness-tof-fit metrics
 try; out.fit; catch; out.fit = VBA_fit(posterior,out); end
 
-% derive Volterra kernels
-if out.dim.n_t>1 && out.options.kernelSize>0
+if out.dim.n_t>1 % && out.dim.u >= 1 && ~isempty(out.options.f_fname)
+%     if isequal(out.options.f_fname,@f_DCMwHRF) && isequal(out.options.g_fname,@g_HRF3)
+%         [out.options] = VBA_check4DCM(out.options);
+%     end
     try
         kernels = VBA_VolterraKernels(posterior,out);
     catch
@@ -38,6 +19,7 @@ if out.dim.n_t>1 && out.options.kernelSize>0
 else
     kernels = [];
 end
+
 
 % get null model (H0) evidence
 [LLH0] = VBA_LMEH0(y,out.options);
@@ -57,10 +39,12 @@ else
         DKL.sigma(iG) = VBA_KL(m0,v0,m,v,'Gamma');
     end
 end
+
 if out.dim.n > 0 % hidden states and initial conditions
     efficiency.X = -out.suffStat.SX;
     efficiency.X0 = -out.suffStat.SX0;
-    if isinf(out.options.priors.a_alpha) && isequal(out.options.priors.b_alpha,0)
+    if isinf(out.options.priors.a_alpha) ...
+            && isequal(out.options.priors.b_alpha,0)
         efficiency.alpha = NaN;
         DKL.alpha = NaN;
     else
@@ -151,22 +135,17 @@ catch
     sampleInd = 1:out.dim.n_t;
 end
 
-% get residuals structure: data noise
+% get residuals: data noise
 for iS = 1:numel(out.options.sources)
     % source wise
     ySource = out.options.sources(iS).out ;
     res = out.suffStat.dy(ySource,:);
-    if out.options.sources(iS).type==0
-        gi = find(iS==find([out.options.sources(:).type]==0));
-        iQyt = out.options.priors.iQy(:,gi);
-        res = getWeightedResiduals(res,iQyt);
-    end
     % remove skipped
-    res(out.options.isYout(ySource,:)==1) = NaN ;
+    res(out.options.isYout(ySource,:)==1) = NaN ;    
     dy(iS).dy = res(:);
-    dy(iS).R = VBA_spm_autocorr(res);
-    dy(iS).m = VBA_nanmean(dy(iS).dy);
-    dy(iS).v = VBA_nanvar(dy(iS).dy);
+    dy(iS).R = spm_autocorr(res);
+    dy(iS).m = nanmean(dy(iS).dy);
+    dy(iS).v = nanvar(dy(iS).dy);
     [dy(iS).ny,dy(iS).nx] = hist(dy(iS).dy,10);
     dy(iS).ny = dy(iS).ny./sum(dy(iS).ny);
     d = diff(dy(iS).nx);
@@ -176,6 +155,7 @@ for iS = 1:numel(out.options.sources)
     dy(iS).grid = dy(iS).nx(1):d*1e-2:dy(iS).nx(end);
     dy(iS).pg = exp(-0.5.*(dy(iS).m-dy(iS).grid).^2./dy(iS).v);
     dy(iS).pg = dy(iS).pg./spgy;
+
     if  out.options.sources(iS).type==0
         igs = sum([out.options.sources(1:iS).type]==0);
         shat = posterior.a_sigma(igs)./posterior.b_sigma(igs);
@@ -185,10 +165,9 @@ for iS = 1:numel(out.options.sources)
     end
 end
 
-% get residuals structure: state noise
-if ~isempty(out.suffStat.dx)
-    wdx = getWeightedResiduals(out.suffStat.dx,out.options.priors.iQx);
-    dx.dx = wdx(:);
+% get residuals: state noise
+dx.dx = out.suffStat.dx(:);
+if ~isempty(dx.dx)
     dx.m = mean(dx.dx);
     dx.v = var(dx.dx);
     [dx.ny,dx.nx] = hist(dx.dx,10);
@@ -204,8 +183,6 @@ if ~isempty(out.suffStat.dx)
     spgy = sum(exp(-0.5.*ahat.*dx.nx.^2));
     dx.pg2 = exp(-0.5.*ahat.*dx.grid.^2);
     dx.pg2 = dx.pg2./spgy;
-else
-    dx.dx = [];
 end
 
 % get parameters posterior correlation matrix
@@ -265,7 +242,6 @@ tick = tick +0.5;
 tick = tick(2:end-1);
 ltick = ltick + 0.5;
 
-
 % wrap up
 diagnostics.pgx = reshape(muy,out.dim.p,[]);
 diagnostics.pvy = reshape(Vy,out.dim.p,[]);
@@ -284,15 +260,6 @@ diagnostics.tick = tick;
 diagnostics.ticklabel = ticklabel;
 diagnostics.C = C;
 out.diagnostics = diagnostics;
-
-
-function wdx = getWeightedResiduals(dx,iQx)
-% weigths residuals according to (state/data) precision matrix
-wdx = zeros(size(dx));
-for t = 1:size(dx,2)
-    sqrtiQ = VBA_getISqrtMat(iQx{t},0);
-    wdx(:,t) = sqrtiQ*dx(:,t);
-end
 
 
 

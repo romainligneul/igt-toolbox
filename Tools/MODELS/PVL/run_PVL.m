@@ -9,9 +9,9 @@ options = A.fit.options;
 
 %% define functions used by the model and parameter transformation
 % evolution function
-evof = @e_PVL_IOWA;
+evof = @e_PVL;
 % observation function
-obsf = @o_PVL_IOWA;
+obsf = @o_PVL;
 
 %% define dimensions of the model and priors over parameters
 %
@@ -36,60 +36,12 @@ switch A.fit.priors.type
         Tsig0to5 = @(x) sig(x)*5;
         TsigMin2to2 = @(x) sig(x)*4-2;
         
-    case 'secondpass'
-        
-        % get results from the first-pass
-        % the path should be written relative to IGT_main script.
-        options.priors.first_pass = [A.main_path '/504s_vba_flat/o_PVL_IOWA_e_PVL_IOWA_13-Jun-2017_1/fitted_model.mat'];
-        load(options.priors.first_pass, 'R')
-        
-        % leave-one-out priors' distributions
-        for s = 1:size(R.rawMuTheta,1)
-            % initialise prior matrices
-            priors{s}.muPhi = zeros(1,dim.n_phi);
-            priors{s}.SigmaPhi = eye(dim.n_phi);
-            priors{s}.muTheta = zeros(1,dim.n_theta);
-            priors{s}.SigmaTheta = eye(dim.n_theta);
-            % get first-pass values leaving subject out
-            dumtheta =  R.rawMuTheta;
-            dumtheta(s,:) = [];
-            dumphi =  R.rawMuPhi;
-            dumphi(s,:) = [];
-            % assign
-            priors{s}.muPhi = mean(dumphi)';
-            priors{s}.muTheta = mean(dumtheta)';
-            priors{s}.SigmaPhi(priors{s}.SigmaPhi==1) = std(dumphi).^ 2;
-            priors{s}.SigmaTheta(priors{s}.SigmaTheta==1) = std(dumtheta).^ 2;
-            priors{s}.muX0(1:4,1) = [0 0 0 0];
-        end
-        
-        Traw = @(x) x;
-        Tsig = @sig;
-        Texp = @exp;
-        Tsig0to5 = @(x) sig(x)*5;
-        TsigMin2to2 = @(x) sig(x)*4-2;
-        clear R;
-        
     case 'informed' % priors from first pass
         
         priors.muPhi = -2.1961;
         priors.SigmaPhi = 0.7915^2;
         priors.muTheta = [0.9560    1.6392    1.4903];
         priors.SigmaTheta = [0.955983560352368,0,0;0,1.63919054524668,0;0,0,1.49026435762038;].^2;
-        priors.muX0(1:4,1) = [0 0 0 0];
-        
-        Traw = @(x) x;
-        Tsig = @sig;
-        Texp = @exp;
-        Tsig0to5 = @(x) sig(x)*5;
-        TsigMin2to2 = @(x) sig(x)*4-2;
-        
-    case 'informed2' % priors from second pass
-        
-        priors.muPhi = -2.19927253238905;
-        priors.SigmaPhi = 0.515791560862672;
-        priors.muTheta = [-0.855141016741986,-1.60879833622695,0.764787896726035];
-        priors.SigmaTheta = [0.287882209376611,0,0;0,2.18800667452825,0;0,0,1.84078329121181];
         priors.muX0(1:4,1) = [0 0 0 0];
         
         Traw = @(x) x;
@@ -207,9 +159,12 @@ if A.simulate_and_recover && A.fit.fminunc==0
     for s = 1:length(data)
         for d = 1:4
             deck_fb{d} = [deck_fb{d};[data{s}.win(data{s}.deck==d) data{s}.lose(data{s}.deck==d)]/A.fit.divide_feeback];
-            ranges(d,:) = [min(deck_fb{d}(:,1)) max(deck_fb{d}(:,1)) min(deck_fb{d}(deck_fb{d}(:,2)>0,2)) max(deck_fb{d}(:,2)) ];
         end
     end
+    for d = 1:4
+        ranges(d,:) = [min(deck_fb{d}(:,1)) max(deck_fb{d}(:,1)) min(deck_fb{d}(deck_fb{d}(:,2)>0,2)) max(deck_fb{d}(:,2)) ];
+    end
+    
     fb.h_fname = @feedback_IOWA;
     fb.inH = deck_fb;
     % allocate input for feedback simulation
@@ -253,13 +208,21 @@ if A.simulate_and_recover && A.fit.fminunc==0
                 R.simulation.predicted_choices(s,t) = NaN;
             end
         end
-        R.simulation.simulated_fb(s,:) = sim_u(3,:)-sim_u(4,:);
+        R.simulation.simulated_gains(s,:) = sim_u(3,:);
+        R.simulation.simulated_loss(s,:) = sim_u(4,:);
         R.simulation.choice_prob(s,:,:) = sim_out.suffStat.gx;
+        
+        % log GoF
+        R.simulation.GoF(s,1) =  sim_out.F;
+        R.simulation.GoF(s,2) =  sim_out.fit.BIC;
+        R.simulation.GoF(s,3) =  sim_out.fit.AIC;
+        R.simulation.GoF(s,4) =  sim_out.fit.LL;
         
         % stop analysis at maxsujects if required
         if ~isempty(A.fit.maxsubjects) && s == A.fit.maxsubjects
             break
         end
+        
     end
 end
 
@@ -276,10 +239,12 @@ end
 
 % make and fill dir
 mkdir(R.output_subdir);
-if A.complete_save
+if A.complete_save==1
     save([R.output_subdir '/fitted_model'], 'out', 'posterior', 'R', 'A');
+elseif A.complete_save==-1
+    save([R.output_subdir '/fitted_model'], 'R');
 else
-    save([R.output_subdir '/fitted_model'], 'R', 'A');
+    save([R.output_subdir '/fitted_model'], 'R', 'A');    
 end
 % save script in dir
 scriptname  = mfilename('fullpath');

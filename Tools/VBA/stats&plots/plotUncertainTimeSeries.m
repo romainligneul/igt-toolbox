@@ -1,4 +1,4 @@
-function [haf,hf,hp] = plotUncertainTimeSeries(muX,SX,dTime,hParent,ind,color)
+function [haf,hf,hp] = plotUncertainTimeSeries(muX,SX,dTime,hParent,ind)
 % plots uncertain time series
 % function [haf,hf,hp] = plotUncertainTimeSeries(muX,SX,dTime,hParent,ind)
 % This function plots uncertain time series, ie time series associated with
@@ -12,13 +12,12 @@ function [haf,hf,hp] = plotUncertainTimeSeries(muX,SX,dTime,hParent,ind,color)
 %   - hParent: the handle of the parent axes
 %   - ind: the indices of the dimensions of the time series to be displayed
 %   (useful in high dimensional cases)
-%   - color: color of the graphical objects
 % OUT:
 %   - haf: the current axes handle
-%   - hf: the patchs handles (for later error bar corrections)
+%   - hf: the patchs/errorbar handles (for later error bar corrections)
 %   - hp: the bar/line plot handles
 
-try,color;catch,color=[];end
+
 
 % Get dimensions
 n = size(muX,1);
@@ -34,9 +33,7 @@ try
     if ~isax
         hf = figure('color',ones(1,3));
         haf = axes('parent',hf);
-        box(haf,'off');
-    else
-        
+        box(haf,'off')
     end
 catch
     hf = figure('color',ones(1,3));
@@ -65,7 +62,7 @@ if indEnd > 1
     % Plot first moment
     hp = plot(haf,dTime,muX(ind,1:indEnd)');
     % Add confidence intervals
-    %if sum(SX(:)) ~= 0
+    if sum(SX(:)) ~= 0
         set(haf,'nextplot','add')
         for i = 1:n
             yp = [muX(ind(i),1:indEnd)+sc*sqrt(SX(ind(i),1:indEnd)),fliplr(muX(ind(i),1:indEnd)-sc*sqrt(SX(ind(i),1:indEnd)))];
@@ -73,21 +70,13 @@ if indEnd > 1
             col = get(hp(i),'color');
             hf(i) = fill(xp,yp,'r','parent',haf,'facecolor',col,'edgealpha',0,'facealpha',0.25);
         end
-    %end
+    end
     set(haf,'ygrid','on')
     axis(haf,'tight')
-    if ~isempty(color)
-        set(hp,'color',color)
-        set(hf,'FaceColor',color)
-    end
 else
     hp = bar(dTime:dTime+n-1,muX(ind),'facecolor',[.8 .8 .8],'parent',haf);
     set(haf,'nextplot','add')
     hf = errorbar(dTime:dTime+n-1,muX(ind),sc*sqrt(SX(ind)),'r.','parent',haf);
-    if ~isempty(color)
-        set(hp,'FaceColor',color)
-        set(hf,'color',color)
-    end
 end
 
 % Add confidence intervals scaling control
@@ -103,6 +92,7 @@ try % only when no parent handle has been specified
     set(hh(1),'position',[0.4 0.02 pos(3:4)])
     hh(2) = uicontrol('style','text','string','Change error bars','units','normalized','position',[0.5 0.02 0.2 0.0476],'backgroundcolor',ones(1,3));
 end
+
 
 
 function [] = dox(e1,e2)

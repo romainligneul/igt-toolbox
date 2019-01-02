@@ -23,7 +23,7 @@ end
 if doFig
     pos0 = get(0,'screenSize');
     pos = [0.51*pos0(3),0.05*pos0(4),0.45*pos0(3),0.85*pos0(4)];
-    handles.hf = figure('position',pos,'color',[1 1 1],'name',out.options.figName,'tag','groupBMC');
+    handles.hf = figure('position',pos,'color',[1 1 1],'name','group-level Bayesian model comparison','tag','groupBMC');
     handles.ha(1) = subplot(3,2,1,'parent',handles.hf,'nextplot','add');
     handles.ha(2) = subplot(3,2,2,'parent',handles.hf,'nextplot','add','clim',[0,1]);
     colormap(handles.ha(2),flipud(bone))
@@ -47,10 +47,7 @@ if doFig
     end
     xlabel(handles.ha(1),'models')
     set(handles.ha(1),'xtick',1:K,'xlim',[0.5,K+0.5],'ygrid','on')
-    if ~isempty(out.options.modelNames)
-        set(handles.ha(1),'xticklabel',out.options.modelNames)
-    end
-    VBA_title(handles.ha(1),'log- model evidences')
+    title(handles.ha(1),'log- model evidences')
     % display families partition
     if ~isempty(out.options.families)
         nf = size(out.options.C,2);
@@ -58,11 +55,8 @@ if doFig
         axis(handles.ha(7),'tight')
         xlabel(handles.ha(7),'models')
         ylabel(handles.ha(7),'families')
-        VBA_title(handles.ha(7),'families'' partition')
+        title(handles.ha(7),'families'' partition')
         set(handles.ha(7),'xlim',[0.5,K+0.5],'xtick',[1:K],'ylim',[0.5,nf+0.5],'ytick',[1:nf],'ydir','reverse','clim',[0 1])
-        if ~isempty(out.options.modelNames)
-            set(handles.ha(7),'xticklabel',out.options.modelNames)
-        end
     end
 end
 
@@ -74,11 +68,8 @@ hi = imagesc(posterior.r','parent',handles.ha(2));
 axis(handles.ha(2),'tight')
 xlabel(handles.ha(2),'models')
 ylabel(handles.ha(2),'subjects')
-VBA_title(handles.ha(2),'model attributions')
+title(handles.ha(2),'model attributions')
 set(handles.ha(2),'xlim',[0.5,K+0.5],'xtick',[1:K],'ylim',[0.5,n+0.5],'ytick',[1:n],'ydir','reverse','clim',[0 1])
-if ~isempty(out.options.modelNames)
-    set(handles.ha(2),'xticklabel',out.options.modelNames)
-end
 set(handles.hc,'visible','on')
 
 % display model frequencies
@@ -94,10 +85,7 @@ if ~isempty(out.options.families)
 end
 xlabel(handles.ha(3),'models')
 set(handles.ha(3),'xtick',1:K,'xlim',[0.5,K+0.5],'ylim',[0 1],'ygrid','on')
-if ~isempty(out.options.modelNames)
-    set(handles.ha(3),'xticklabel',out.options.modelNames)
-end
-VBA_title(handles.ha(3),'estimated model frequencies')
+title(handles.ha(3),'estimated model frequencies')
 
 % display exceedance probabilities
 cla(handles.ha(4))
@@ -105,10 +93,7 @@ bar(handles.ha(4),out.ep,'facecolor',0.8*[1 1 1])
 plot(handles.ha(4),[0.5,K+0.5],[0.95,0.95],'r')
 xlabel(handles.ha(4),'models')
 set(handles.ha(4),'xtick',1:K,'xlim',[0.5,K+0.5],'ylim',[0 1],'ygrid','on')
-if ~isempty(out.options.modelNames)
-    set(handles.ha(4),'xticklabel',out.options.modelNames)
-end
-VBA_title(handles.ha(4),'exceedance probabilities')
+title(handles.ha(4),'approximated exceedance probabilities')
 
 % display VB algorithm convergence
 cla(handles.ha(5))
@@ -135,24 +120,27 @@ end
 xlabel(handles.ha(5),'VB iterations')
 ylabel(handles.ha(5),'VB free energy')
 set(handles.ha(5),'xtick',1:length(out.F),'xticklabel',[],'xlim',[0.5,length(out.F)+0.5],'ygrid','on')
-VBA_title(handles.ha(5),'VB algorithm convergence')
+title(handles.ha(5),'VB algorithm convergence')
 
 if ~isempty(out.options.families)
     nf = size(out.options.C,2);
+    try
+        familiesName=out.options.familiesName;
+    catch
+        familiesName = cellfun(@(i) ['f' num2str(i)], num2cell(1:nf), 'UniformOutput',false);
+    end
     cla(handles.ha(6))
     [haf,hf,hp] = plotUncertainTimeSeries(out.families.Ef,diag(out.families.Vf),[],handles.ha(6));
     plot(handles.ha(6),[0.5,nf+0.5],[1,1]/nf,'g')
     xlabel(handles.ha(6),'families')
-    set(handles.ha(6),'xtick',1:nf,'xlim',[0.5,nf+0.5],'ylim',[0 1],'ygrid','on')
-    VBA_title(handles.ha(6),'estimated family frequencies')
+    set(handles.ha(6),'xtick',1:nf,'XTickLabel',familiesName,'xlim',[0.5,nf+0.5],'ylim',[0 1],'ygrid','on')
+    title(handles.ha(6),'estimated family frequencies')
 end
 
 % display free energy update
-if ~isfield(out,'date')
-    if length(out.F) > 1
-        dF = diff(out.F);
-        set(handles.ho,'string',['RFX evidence: log p(y|H1) >= ',num2str(out.F(end),'%1.3e'),' , dF= ',num2str(dF(end),'%4.3e')])
-    end
+if ~isfield(out,'date') && length(out.F) > 1
+    dF = diff(out.F);
+    set(handles.ho,'string',['RFX evidence: log p(y|H1) >= ',num2str(out.F(end),'%1.3e'),' , dF= ',num2str(dF(end),'%4.3e')])
 else
     if floor(out.dt./60) == 0
         timeString = [num2str(floor(out.dt)),' sec'];
@@ -160,7 +148,7 @@ else
         timeString = [num2str(floor(out.dt./60)),' min'];
     end
     str = ['VB inversion complete (took ~',timeString,').'];
-    set(handles.ho,'string',[str,' BOR: p(H0|y) >= ',num2str(out.bor,3)])
+    set(handles.ho,'string',[str,' RFX evidence: log p(y|H1) >= ',num2str(out.F(end),'%1.3e'),'.'])
 end
 
 drawnow

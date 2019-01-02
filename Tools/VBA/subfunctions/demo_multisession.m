@@ -59,6 +59,7 @@ dim.n=1;
 
 options.verbose=1;
 options.DisplayWin=1;
+options.extended=1
 % =========================================================================
 % 2 sessions case
 % =========================================================================
@@ -80,6 +81,8 @@ options.multisession.split = [n_t/2 n_t/2]; % two sessions of 120 datapoints eac
 
 % = Model identification as usual
 [posterior_split,out_split] = VBA_NLStateSpaceModel(y,u,@f_demo_multisession,@g_demo_multisession,dim,options);
+
+pause()
 
 % =========================================================================
 % 1 session case

@@ -22,7 +22,7 @@ if ~isempty(theta)
         muTheta = posterior.muTheta(:,end);
     end
     plotUncertainTimeSeries(muTheta,V,[],hs);
-    VBA_title(hs,'theta')
+    title(hs,'theta')
     plot(hs,theta,'go')
 end
 if ~isempty(phi)
@@ -37,7 +37,7 @@ if ~isempty(phi)
         muPhi = posterior.muPhi(:,end);
     end
     plotUncertainTimeSeries(muPhi,V,[],hs);
-    VBA_title(hs,'phi')
+    title(hs,'phi')
     plot(hs,phi,'go')
 end
 
@@ -70,7 +70,7 @@ if n_gs>0 %~out.options.binomial
     plot(hs,log([alpha;sigma(:)]),'go')
     set(hs,'xtick',xtick,'xticklabel',lab)
     ylabel(hs,'log-precisions')
-    VBA_title(hs,'precision hyperparameters')
+    title(hs,'precision hyperparameters')
 end
 
 if out.dim.n_t > 1
@@ -86,7 +86,7 @@ if out.dim.n > 0
         set(hs,'xtick',xtick,'nextplot','add','xlim',[.2,out.dim.n+.8])
         V = VBA_getVar(posterior.SigmaX0);
         plotUncertainTimeSeries(posterior.muX0,V,[],hs);
-        VBA_title(hs,'initial conditions')
+        title(hs,'initial conditions')
         plot(x0,'go')
         % Hidden states
         hres2 = figure(...
@@ -103,7 +103,7 @@ if out.dim.n > 0
             plotUncertainTimeSeries(posterior.muX,V,dTime,hs);
         end
         grid(hs,'on')
-        VBA_title(hs,'estimated hidden-states time series')
+        title(hs,'estimated hidden-states time series')
     end
 end
 
@@ -124,7 +124,7 @@ else
     plotUncertainTimeSeries(out.suffStat.gx',out.suffStat.vy',dTime,hs);
 end
 grid(hs,'on')
-VBA_title(hs,'predicted y')
+title(hs,'predicted y')
 
 if out.dim.n > 0
     miX = min([posterior.muX(:);x(:)]);
@@ -133,7 +133,7 @@ if out.dim.n > 0
     set(hs,'nextplot','add')
     plot(hs,posterior.muX(:),x(:),'.')
     plot(hs,[miX,maX],[miX,maX],'r')
-    VBA_title(hs,'x(t) vs <x(t)>')
+    title(hs,'x(t) vs <x(t)>')
     grid(hs,'on')
     axis(hs,'tight')
 end
@@ -149,7 +149,7 @@ else
     errorbar(gridg,stacky,stdy,'k.','parent',hs)
 end
 
-VBA_title(hs,'y(t) vs <y(t)>')
+title(hs,'y(t) vs <y(t)>')
 grid(hs,'on')
 axis(hs,'tight')
 

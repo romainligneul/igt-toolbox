@@ -1,6 +1,6 @@
-function [p,f,gridx] = VBA_PPM(m,v,t,form,disp,ha)
-% computes (and displays) P(x>t|m,v) or 1-P(t1<x<t2|m,v)
-% FORMAT [p,f,gridx] = VBA_PPM(m,v,t,disp,form)
+function [p] = VBA_PPM(m,v,t,disp,form)
+% computes the exceedance probability of a random effect (+ plots)
+% FORMAT [p] = VBA_PPM(m,v,t,disp,form)
 % IN:
 %   - m/v: sufficient statistics of the pdf
 %       -> if form='gaussian', m=E[x] and v=V[x]
@@ -9,18 +9,15 @@ function [p,f,gridx] = VBA_PPM(m,v,t,form,disp,ha)
 %   - t: if t is a scalar, then it is a threshold (to calculate p =
 %   P(x>t)) ; if it is a vector, then it is an interval (to calculate p =
 %   P(x<t(1) or x>t(2)).
+%   - disp: a binary switch that flags whether or not to display the
+%   exceedance probability onto the posterior pdf.
 %   - form: 'gaussian' or 'beta'
-%   - disp: a binary switch that flags whether or not to display the pdf.
-%   - ha: axis' handle for display (relevant only if disp=1)
 % OUT:
-%   - p: P(x>t|m,v) or 1-P(t1<x<t2|m,v)
-%   - f: pdf (either Gaussian or Beta) evaluated on a grid
-%   - gridx: grid over which the pdf is evaluated
+%   - p: the exceedance probability
 
-try, form; catch form='gaussian'; end
-try, disp; catch disp=0; end
+try, disp; catch, disp=0; end
+try, form; catch, form='gaussian'; end
 
-% derive probability density function
 switch form
     case 'gaussian'
         s = sqrt(v);
@@ -29,13 +26,12 @@ switch form
         gridx = gridx + m;
         f = exp(-0.5*(gridx-m).^2./v);
     case 'beta'
-        gridx = 0:1e-4:1;
+        gridx = 0:1e-2:1;
         logf = (m-1).*log(gridx) + (v-1).*log(1-gridx);
         f = exp(logf-max(logf));
+%         f = (gridx.^(m-1)).*((1-gridx).^(v-1));
 end
 f = f./sum(f);
-
-% derive P(x>t|m,v) or 1-P(t1<x<t2|m,v)
 if length(t) == 1
     [mp,indt] = min(abs(gridx-t));
     p = sum(f(indt:end));
@@ -45,32 +41,31 @@ else
     p = 1-sum(f(indt1:indt2));
 end
 
-% display results
+
 if disp
-    try
-        set(ha,'nextplot','add')
-    catch
-        hf = figure('color',[1 1 1]);
-        ha = axes('parent',hf,'nextplot','add');
-    end
+    hf = figure('color',[1 1 1]);
+    ha = axes('parent',hf,'nextplot','add');
     if length(t) == 1
         yp = [f(indt:end),zeros(size(f(indt:end)))];
         xp = [gridx(indt:end),fliplr(gridx(indt:end))];
-        fill(xp,yp,'r','parent',ha,'facecolor',0.8*[1 0.75 0.75],'edgecolor','none');
+        fill(xp,yp,'r','parent',ha,'facecolor',0.5*[1 0 0],'edgealpha',0,'facealpha',0.25);
         plot(ha,[gridx(indt),gridx(indt)],[0,f(indt)],'r--')
-        VBA_title(ha,['P(x>',num2str(t,3),') = ',num2str(p,3)])
+        title(ha,['P(x>',num2str(t,'%4.3e'),') = ',num2str(p,'%4.3e')])
     else
         yp1 = [f(1:indt1),zeros(size(f(1:indt1)))];
         xp1 = [gridx(1:indt1),fliplr(gridx(1:indt1))];
         yp2 = [f(indt2:end),zeros(size(f(indt2:end)))];
         xp2 = [gridx(indt2:end),fliplr(gridx(indt2:end))];
-        fill(xp1,yp1,'r','parent',ha,'facecolor',0.8*[1 0.75 0.75],'edgecolor','none');
-        fill(xp2,yp2,'r','parent',ha,'facecolor',0.8*[1 0.75 0.75],'edgecolor','none');
+        fill(xp1,yp1,'r','parent',ha,'facecolor',0.5*[1 0 0],'edgealpha',0,'facealpha',0.25);
+        fill(xp2,yp2,'r','parent',ha,'facecolor',0.5*[1 0 0],'edgealpha',0,'facealpha',0.25);
         plot(ha,[gridx(indt1),gridx(indt1)],[0,f(indt1)],'r--')
         plot(ha,[gridx(indt2),gridx(indt2)],[0,f(indt2)],'r--')
-        VBA_title(ha,['P(x<',num2str(t(1),3),' or x>',num2str(t(2),3),') = ',num2str(p,3)])
+        title(ha,['P(x<',num2str(t(1),'%4.3e'),' or x>',...
+            num2str(t(2),'%4.3e'),') = ',num2str(p,'%4.3e')])
     end
     plot(ha,gridx,f,'k')
+    grid(ha,'on')
+    axis(ha,'tight')
     box(ha,'off')
     xlabel(ha,'effect of interest: x')
     ylabel(ha,'probability density function: p(x)')

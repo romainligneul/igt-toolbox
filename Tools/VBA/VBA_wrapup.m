@@ -36,7 +36,6 @@ if ~options.OnLine
     [st,i] = dbstack;
     try,ifInit=isequal(st(i+2).name,'VBA_Initialize');catch,ifInit=0;end
     if ~ifInit % main VB inversion has converged
-        status = 'inversion';
         try
             if options.DisplayWin
                 % display diagnostics
@@ -51,13 +50,10 @@ if ~options.OnLine
             out.options = rmfield(out.options,'display');
             out.options.hf = display.hfp;
         end
+        status = 'inversion';
     else
         status = 'initialization';
-        if options.DisplayWin
-            out.options.display = display;
-        end
     end
-
     % display overall inversion time
     if floor(out.dt./60) == 0
         timeString = [num2str(floor(out.dt)),' sec'];
@@ -69,7 +65,7 @@ if ~options.OnLine
         str = VBA_summary(out,1);
         VBA_disp(str(setdiff(1:6,1:2)),options)
     end
-%     VBA_disp(' ',options)
+    VBA_disp(' ',options)
     drawnow
 end
 

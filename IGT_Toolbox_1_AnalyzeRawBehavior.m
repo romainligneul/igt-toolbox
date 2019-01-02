@@ -1,3 +1,4 @@
+
 %%%%%%%%%%%%%%%% IGTtoolbox Results - Behavioral Measures %%%%%%%%%%%%%%%%%
 % This script outputs all the behavioral measures which are independent of
 % computational modeling (e.g net scores, directed exploration etc.).
@@ -11,8 +12,8 @@
 % It also plots the different measurements (plot2svg can be used to obtain
 % vectorial images).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Romain Ligneul / romain.ligneul@gmail.com / August 2018.
-% v1.0
+% Romain Ligneul / romain.ligneul@gmail.com / Dec 2018.
+% v1.2
 
 % clean the environment
 clear all; close all;clc;
@@ -29,9 +30,10 @@ colormap_custom = 'brewer1';
 %% Loop over subjects and compute behavioral measures
 % in order to avoid polluting the workspace with useless variable, all work
 % is saved in structure
+
 for s = 1:length(data)
     
-    disp(['subject n°' num2str(s)])
+    disp(['subject nÂ°' num2str(s)])
     
     % subject id and condition id
     subj_id(s,1) = s;
@@ -46,6 +48,14 @@ for s = 1:length(data)
     netscore_time(s,:) = cumsum(ismember(data{s}.deck, [3 4]))-cumsum(ismember(data{s}.deck, [1 2]));
     netscore_total(s,:) = netscore_time(s,end);
     
+    for d=1:4
+        times_chosen(d,:) = cumsum(data{s}.deck==d);
+        dumpayoff = cumsum(double(data{s}.deck==d).*(data{s}.win-data{s}.lose))';
+        avg_payoff(d,:) = dumpayoff./times_chosen(d,:);
+    end
+    avg_payoff = [[NaN;NaN;NaN;NaN],avg_payoff(:,1:end-1)];
+    times_chosen = [[0;0;0;0],times_chosen(:,1:end-1)];
+
     % compute win-stay lose-shift metrics
     stay = data{s}.deck(2:end)==data{s}.deck(1:end-1);
     prvloss = abs(data{s}.lose(1:end-1))>0;
@@ -142,7 +152,7 @@ DE4_ymat = [];
 gmat = [];
 % loop over conditions
 for c = 1:length(condition_selection);
-    gmat = [gmat; condition_number(c)*ones(sum(condition_number(c)==cond_id),1)];
+    gmat = [gmat; condition_selection(c)*ones(sum(condition_number(c)==cond_id),1)];
     % net score
     stats_all.netscore.mat{c} = netscore_total(condition_number(c)==cond_id);
     stats_all.netscore.normality(c) = 1-lillietest(stats_all.netscore.mat{c});
@@ -474,8 +484,8 @@ else
     subset = repmat(ismember(cond_label, condition_list(condition_selection)),1,size(y,2));
     g(2,2) = gramm('x', x(:), 'y', y(:), 'color', color(:), 'subset', subset(:));
 end
-g(2,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.8, 'width', 0.9);
-g(2,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.8, 'width', 0.9, 'setylim', true);
+g(2,2).stat_summary('type', 'sem', 'geom', 'bar', 'dodge', 0.7, 'width', 0.6);
+g(2,2).stat_summary('type', 'sem', 'geom', 'errorbar', 'dodge', 0.7, 'width', 0.6, 'setylim', true);
 g(2,2).axe_property('Xlim', [0 2], 'xtick', [], 'xticklabel', []); ;
 g(2,2).set_title('DE4 average');
 g(2,2).set_names('x', 'group', 'y', 'frequency');

@@ -68,7 +68,7 @@ end
 options.priors = priors;
 options.inF = in;
 options.inG = in;
-options.backwardLag  = 16;
+options.backwardLag  = 8;
 dim.n_theta = in.dim.n_theta;
 dim.n_phi = 0;
 dim.n = 2*in.dim.n;
@@ -85,7 +85,7 @@ options.dim = dim;
 displaySimulations(y,x,eta,e)
 
 
-% Call inversion routine with AR(1) priors on state noise
+% Call inversion routine
 [posterior,out] = VBA_NLStateSpaceModel(y,u,f_fname,g_fname,dim,options);
 
 % Display results
@@ -109,6 +109,5 @@ end
 displayResults(p0,o0,y-e,x(1:2,:),x0(1:2),theta,phi,alpha,sigma);
 
 
-% re-display AR(1) inversion
-VBA_ReDisplay(posterior,out,1)
+
 

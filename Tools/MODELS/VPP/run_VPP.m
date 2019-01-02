@@ -9,9 +9,9 @@ options = A.fit.options;
 
 %% define functions used by the model and parameter transformation
 % evolution function
-evof = @e_VPP_IOWA;
+evof = @e_VPP;
 % observation function
-obsf = @o_VPP_IOWA;
+obsf = @o_VPP;
 
 %% define dimensions of the model and priors over parameters
 %
@@ -35,43 +35,7 @@ switch A.fit.priors.type
         Tsig0to5 = @(x) sig(x)*5;
         TsigMin2to2 = @(x) sig(x)*4-2;
         Tsigmin1plus1 = @(x) -1+sig(x)*2;
-
-    case 'secondpass'
-        
-        % get results from the first-pass
-        % the path should be written relative to IGT_main script.
-        options.priors.first_pass = [A.main_path '/504s_vba_flat/o_VPP_IOWA_e_VPP_IOWA_13-Jun-2017_1/fitted_model.mat'];
-        load(options.priors.first_pass, 'R')
-        
-        % leave-one-out priors' distributions
-        for s = 1:size(R.rawMuTheta,1)
-            % initialise prior matrices
-            priors{s}.muPhi = zeros(1,dim.n_phi);
-            priors{s}.SigmaPhi = eye(dim.n_phi);
-            priors{s}.muTheta = zeros(1,dim.n_theta);
-            priors{s}.SigmaTheta = eye(dim.n_theta);
-            % get first-pass values leaving subject out
-            dumtheta =  R.rawMuTheta;
-            dumtheta(s,:) = [];
-            dumphi =  R.rawMuPhi;
-            dumphi(s,:) = [];
-            % assign
-            priors{s}.muPhi = mean(dumphi)';
-            priors{s}.muTheta = mean(dumtheta)';
-            priors{s}.SigmaPhi(priors{s}.SigmaPhi==1) = std(dumphi).^ 2;
-            priors{s}.SigmaTheta(priors{s}.SigmaTheta==1) = std(dumtheta).^ 2;
-            priors{s}.muX0(1:8,1) = [0 0 0 0 0 0 0 0];%hs.initval;
-        end
-        
-        Traw = @(x) x;
-        Tsig = @sig;
-        Texp = @exp;
-        Tsig0to5 = @(x) sig(x)*5;
-        TsigMin2to2 = @(x) sig(x)*4-2;
-        Tsigmin1plus1 = @(x) -1+sig(x)*2;
-
-        clear R;
-        
+    
     case 'informed' % use priors derived from first pass
         
         priors.muPhi = [-1.1891   -0.5810];
@@ -87,21 +51,6 @@ switch A.fit.priors.type
         TsigMin2to2 = @(x) sig(x)*4-2;
         Tsigmin1plus1 = @(x) sig(x)*2-1;
 
-    case 'informed2' % use priors derived from second pass
-        
-        priors.muPhi = [-1.36396368702877,-0.378457357093285];
-        priors.SigmaPhi = [0.122322012762468,0;0,0.0650576106856914];
-        priors.muTheta = [-0.225812190543266,-1.85252660846961,-1.31443359286361,-0.273126732917975,0.154109770085789,-0.0768653927885063];
-        priors.SigmaTheta = [0.373768214303140,0,0,0,0,0;0,0.954032987168110,0,0,0,0;0,0,1.45085768264771,0,0,0;0,0,0,1.52959982837073,0,0;0,0,0,0,0.127575695436472,0;0,0,0,0,0,0.167555126921264];
-        priors.muX0(1:8,1) = [0 0 0 0 0 0 0 0];
-        
-        Traw = @(x) x;
-        Tsig = @sig;
-        Texp = @exp;
-        Tsig0to5 = @(x) sig(x)*5;
-        TsigMin2to2 = @(x) sig(x)*4-2;
-        Tsigmin1plus1 = @(x) sig(x)*2-1;
-        
     case 'shrinkage'
         
         priors = []; % default settings of the VBA toolbox
@@ -212,9 +161,12 @@ if A.simulate_and_recover && A.fit.fminunc==0
     for s = 1:length(data)
         for d = 1:4
             deck_fb{d} = [deck_fb{d};[data{s}.win(data{s}.deck==d) data{s}.lose(data{s}.deck==d)]/A.fit.divide_feeback];
-            ranges(d,:) = [min(deck_fb{d}(:,1)) max(deck_fb{d}(:,1)) min(deck_fb{d}(deck_fb{d}(:,2)>0,2)) max(deck_fb{d}(:,2)) ];
         end
     end
+    for d = 1:4
+        ranges(d,:) = [min(deck_fb{d}(:,1)) max(deck_fb{d}(:,1)) min(deck_fb{d}(deck_fb{d}(:,2)>0,2)) max(deck_fb{d}(:,2)) ];
+    end
+    
     fb.h_fname = @feedback_IOWA;
     fb.inH = deck_fb;
     % allocate input for feedback simulation
@@ -258,13 +210,21 @@ if A.simulate_and_recover && A.fit.fminunc==0
                 R.simulation.predicted_choices(s,t) = NaN;
             end
         end
-        R.simulation.simulated_fb(s,:) = sim_u(3,:)-sim_u(4,:);
+        R.simulation.simulated_gains(s,:) = sim_u(3,:);
+        R.simulation.simulated_loss(s,:) = sim_u(4,:);
         R.simulation.choice_prob(s,:,:) = sim_out.suffStat.gx;
+        
+        % log GoF
+        R.simulation.GoF(s,1) =  sim_out.F;
+        R.simulation.GoF(s,2) =  sim_out.fit.BIC;
+        R.simulation.GoF(s,3) =  sim_out.fit.AIC;
+        R.simulation.GoF(s,4) =  sim_out.fit.LL;
         
         % stop analysis at maxsujects if required
         if ~isempty(A.fit.maxsubjects) && s == A.fit.maxsubjects
             break
         end
+        
     end
 end
 
@@ -272,7 +232,7 @@ end
 dt = 1;
 while exist([A.output.dir char(obsf) '_' char(evof) '_' date '_' num2str(dt)])
     dt = dt+1;
-end
+end;
 if A.fit.fminunc == 1
     R.output_subdir=[A.output.dir 'fminunc_' char(obsf) '_' char(evof) '_' date '_' num2str(dt)];
 else
@@ -281,10 +241,12 @@ end
 
 % make and fill dir
 mkdir(R.output_subdir);
-if A.complete_save
+if A.complete_save==1
     save([R.output_subdir '/fitted_model'], 'out', 'posterior', 'R', 'A');
+elseif A.complete_save==-1
+    save([R.output_subdir '/fitted_model'], 'R');
 else
-    save([R.output_subdir '/fitted_model'], 'R', 'A');
+    save([R.output_subdir '/fitted_model'], 'R', 'A');    
 end
 % save script in dir
 scriptname  = mfilename('fullpath');

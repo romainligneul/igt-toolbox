@@ -43,7 +43,7 @@ data{1}.rt = [0.73, 1.12, 0.95, etc]
 
 This data structure should be saved in a file named **IGTdata.mat**, within a folder whose name is informative.
 
-In the folders IGTdata/Ahn2014_addiction and IGTdata/opendata504subjects contain 2 scripts named convert_xls.m automatizing this I/O process. However, you may need to write a custom script adapted to your raw data files.
+The folders IGTdata/Ahn2014_addiction and IGTdata/opendata504subjects contain 2 scripts named convert_xls.m automatizing this I/O process. However, you may need to write a custom script adapted to your raw data files.
 
 ## check basic behavioral metrics
 
@@ -95,18 +95,18 @@ To do so, you will need to run the script **IGT_Toolbox_2_FitModels.m**, after a
 % formatted correctly.
 % If you have different groups define carefully data{}.cond and
 % data{}.cond_label, as those will be used automatically in the next step
-load('IGTdata/toydata_5subjects/IGTdata.mat');
+load('IGTdata/toydata/IGTdata.mat');
 
 %% General settings
 % In theory, this section of the script is the only one that users
 % unexperienced with computational modeling will modify.
 
 % 1) Models that the toolbox is going to fit to your data
-A.fit.models = {@run_EV, @run_EXPLORE, @run_PVL, @run_PVLdelta, @run_VPP};
+A.fit.models = {@run_EV, @run_ORL, @run_VSE, @run_PVL, @run_PVLdelta, @run_VPP};
 
 % 2) Output_name (determines directory in which output of the fit is
-% written
-A.output_name = 'toydata_5subjects_flat';
+% written, in IGTmodelfit/)
+A.output_name = 'toydata';
 
 % 3) Should the toolbox save all the information (can be >100mb per model)
 % or just a summary? yes = 1 / no = 0
@@ -176,7 +176,7 @@ Again, all information relative to the procedure can be found on the website of 
 
 ## analyze the modeling results
 
-The final step consists in:
+This step consists in:
 * comparing the different models in terms of goodness of fit, prediction accuracy and parameter recovery
 * testing for significant statistical differences in parameters distribution from one group/condition to another.
 
@@ -193,11 +193,20 @@ After running it, you will have to:
 Once computations are performed, a series of figures will appear on the screen.
 1. A graphical representation of the cross-correlation of all parameters: the lower, the better, because high correlation amongst parameters (especially within a given model) implies that the cognitive meaning of these parameters' value is uncertain. Exact values can be found in the structure **cross_corr**.
 ![Figure 4](Tools/OTHERS/example_figures/Cross_Correlation.JPG)
-2. A representation of model comparison treated as a fixed-effect, using the EE model as the reference model: positive values correspond to the information loss which would be incured by selecting a model different from EE. Note that a -2*X transformation is applied to every goodness of fit metric because the VBA toolbox outputs log-model evidences by default (see [here](http://mbb-team.github.io/VBA-toolbox/wiki/VBA-output-structure/) for an explanation). Exact values can be found in the variable **diff_metrics**.
-![Figure 5](Tools/OTHERS/example_figures/Model_Comparison_FixedEffect.JPG)
-3. A representation of model comparison treated as a random-effect (based on the function VBA_GroupBMC). Top-left panel represents the log-model evidences (based either on AIC, BIC or Free Energy) per subject per model. Top-right panel represents the probability of each model being the correct one, per subject. Bottom-left panel represents the exceedance probability that a given model is the most frequent within the population under scrutiny. Bottom-right panel represents the estimated frequencies of each model at the group level. NB: a separate figure is generated for each goodness of fit metric (i.e BIC, AIC, Free Energy). All information about Bayesian Model Comparison can be found in the structure **post_F**, **out_F**, **post_BIC**, **out_BIC**, **post_AIC** and **out_AIC**.
-![Figure 6](Tools/OTHERS/example_figures/Model_Comparison_RandomEffect_F.JPG)
-4. A representation of the mean +/- sem value of all parameters of a given model. The color code correspond to the group/condition which have been selected for analysis. NB: a separate figure is generated for each model (here, Expected Valence). All means, SD, recovery values and statistical tests related to models' parameters can be found in the structures **stats_theta** (for parameters of the evolution functions) and **stats_phi** (for parameters of the observation functions)
-![Figure 7](Tools/OTHERS/example_figures/Model_parameter_EV.JPG)
-5. A graphical representation of parameter recovery. The dashed line represents the perfect equivalence between actual parameters (in x, obtained by fitting the real dataset) and recovered parameters (in y, obtained by fitting the simulated dataset). Actual and recovered parameters for each individual can be found in the structures **theta_fitsim** and **phi_fitsim** (first column: actual parameters)
-![Figure 8](Tools/OTHERS/example_figures/Parameter_recovery.JPG)
+2. Two panel reporting the predictive accuracy of each model, in the fitted data and simulated data
+![Figure 5](Tools/OTHERS/example_figures/FittedandSimulatedAccuracy.JPG)
+3. A representation of model comparison treated as a fixed-effect, using the EE model as the reference model: positive values correspond to the information loss which would be incured by selecting a model different from EE. Note that a -2*X transformation is applied to every goodness of fit metric because the VBA toolbox outputs log-model evidences by default (see [here](http://mbb-team.github.io/VBA-toolbox/wiki/VBA-output-structure/) for an explanation). Exact values can be found in the variable **diff_metrics**.
+![Figure 6](Tools/OTHERS/example_figures/Model_Comparison_FixedEffect.JPG)
+4. A representation of model comparison treated as a random-effect (based on the function VBA_GroupBMC). Top-left panel represents the log-model evidences (based either on AIC, BIC or Free Energy) per subject per model. Top-right panel represents the probability of each model being the correct one, per subject. Bottom-left panel represents the exceedance probability that a given model is the most frequent within the population under scrutiny. Bottom-right panel represents the estimated frequencies of each model at the group level. NB: a separate figure is generated for each goodness of fit metric (i.e BIC, AIC, Free Energy). All information about Bayesian Model Comparison can be found in the structure **post_F**, **out_F**, **post_BIC**, **out_BIC**, **post_AIC** and **out_AIC**.
+![Figure 7](Tools/OTHERS/example_figures/Model_Comparison_RandomEffect_F.JPG)
+5. Two panels reporting the number of predicted sequential exploration quadruplets by each model, as well as a sensitivity analysis
+![Figure 8](Tools/OTHERS/example_figures/Directed_Exploration_Models.JPG)
+6. A representation of the mean +/- sem value of all parameters of a given model. The color code correspond to the group/condition which have been selected for analysis. NB: a separate figure is generated for each model (here, Expected Valence). All means, SD, recovery values and statistical tests related to models' parameters can be found in the structures **stats_theta** (for parameters of the evolution functions) and **stats_phi** (for parameters of the observation functions)
+![Figure 9](Tools/OTHERS/example_figures/Model_parameter_VPP.JPG)
+7. A graphical representation of parameter recovery. The dashed line represents the perfect equivalence between actual parameters (in x, obtained by fitting the real dataset) and recovered parameters (in y, obtained by fitting the simulated dataset). Actual and recovered parameters for each individual can be found in the structures **theta_fitsim** and **phi_fitsim** (first column: actual parameters)
+![Figure 10](Tools/OTHERS/example_figures/Parameter_recovery.JPG)
+
+## perform recovery analysis
+
+Finally, you can perform the model recovery analysis using the scripts called IGT_Toolbox_4_ModelRecovery and IGT_Toolbox_4_ResultsModelRecovery
+Beware that this is a computationally intensive step: one simulated dataset will be created for each model and all models will be fitted to each of these datasets.
