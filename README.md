@@ -62,19 +62,28 @@ Once computations are performed, a series of figures will appear on the screen.
 
 
 These variables is also contained in a structure named **stats_all** (which appears in the workspace):
-1. *Netscore*: a variable corresponding to the number of "advantageous" choices (C or D)  minus the number of "disadvantageous" choices (A or B)
-![Figure 1](Tools/OTHERS/example_figures/Net_Score.JPG)
+1. __Score__
 
+*Netscore*: a variable corresponding to the number of "advantageous" choices (C or D)  minus the number of "disadvantageous" choices (A or B)
 
-2. *Win Stay (WS) and Lose Shift (LS)*: two variables reflecting the proportion of trials in which participants selected again the same deck after an outcome which involved no loss (WS) and the proportion of trials in which participants selected a different deck after an outcome involving a loss (LS)
+<center><img src="Tools/OTHERS/example_figures/Net_Score.JPG" alt="Figure 1" width="400" /></center><br>
+
+2. __Other metrics__
+
+*Win Stay (WS) and Lose Shift (LS)*: two variables reflecting the proportion of trials in which participants selected again the same deck after an outcome which involved no loss (WS) and the proportion of trials in which participants selected a different deck after an outcome involving a loss (LS)
 
  *H(choice)*: a variable reflecting the entropy of the entire choice sequence of the subject. The maximal value of 2 (bits) implies that the participant explored all decks evenly. The lowest the value the more uneven the exploration of the different decks. The minimal value of 0 implies that the participant constantly selected the same deck.
 
  *MI_successive_choices*: a variable reflecting the statistical mutual information of successive choices. Higher values implies that one could predict to some extent the choice in trial *t+1* by observing the choice made in trial *t*. This variable can thus be seen as reflecting the autocorrelation of successive choices.
- ![Figure 2](Tools/OTHERS/example_figures/Other_Behavioral_Measures.JPG)
 
-3. *DE3* and *DE4*: the model-free measures of directed exploration discussed in the paper accompanying the igt-toolbox. They correspond respectively to the frequency at which participants selected 3 different decks over 3 consecutive trials (DE3: theoretic chance level:0.3333) or 4 different decks over 4 consecutive trials (DE4: theoretic chance level at 0.0938). Note that the chance levels reported as dashed lines are empirical (i.e based on permutation).
-![Figure 3](Tools/OTHERS/example_figures/Directed_Exploration_Figure.JPG)
+ <center><img src="Tools/OTHERS/example_figures/Other_Behavioral_Measures.JPG" alt="Figure 2" width="400"/></center><br>
+
+
+3. __Directed exploration__ (equivalent to Sequential exploration)
+
+*DE3* and *DE4*: the model-free measures of directed exploration discussed in the paper accompanying the igt-toolbox. They correspond respectively to the frequency at which participants selected 3 different decks over 3 consecutive trials (DE3: theoretic chance level:0.3333) or 4 different decks over 4 consecutive trials (DE4: theoretic chance level at 0.0938). Note that the chance levels reported as dashed lines are empirical (i.e based on permutation).
+
+ <center><img src="Tools/OTHERS/example_figures/Directed_Exploration_Figure.JPG" alt="Figure 3" width="400"/></center>
 
 *Note that these figures correspond to the data comparing old and young adults' behavior in the IGT, as reported in the paper accompanying this toolbox*.
 
@@ -83,7 +92,7 @@ Importantly, the structure **stats_all** contains the raw variables, their means
 
 ## fit the computational models
 
-Once you have checked that your data looks reasonable, you can move forward and fit the 5 available models to your dataset. The Explore-Exploit model is fully described in the paper accompanying this toolbox, alongside a more compact description of the Expectancy-Valence model (EV), Prospect Valence Learning (PVL), PVL-Delta and Value Plus Perseverance (VPP) models. A full description of these models can be found in [Steingrover et al., 2016](http://psycnet.apa.org/doi/10.1037/dec0000040).
+Once you have checked that your data looks reasonable, you can move forward and fit the 5 available models to your dataset. The Value plus Sequential Exploration (VSE) model is fully described in the paper accompanying this toolbox, alongside a more compact description of the Expectancy-Valence model (EV), Prospect Valence Learning (PVL), PVL-Delta and Value Plus Perseverance (VPP) models. A full description of these models can be found in [Steingrover et al., 2016](http://psycnet.apa.org/doi/10.1037/dec0000040).
 
 To do so, you will need to run the script **IGT_Toolbox_2_FitModels.m**, after adjusting a couple of parameters. This script is extensively commented. Its first part, which is the only one that most users will need to modify is reproduced below:
 
@@ -192,19 +201,32 @@ After running it, you will have to:
 
 Once computations are performed, a series of figures will appear on the screen.
 1. A graphical representation of the cross-correlation of all parameters: the lower, the better, because high correlation amongst parameters (especially within a given model) implies that the cognitive meaning of these parameters' value is uncertain. Exact values can be found in the structure **cross_corr**.
-![Figure 4](Tools/OTHERS/example_figures/Cross_Correlation.JPG)
+
+ <center><img src="Tools/OTHERS/example_figures/Cross_Correlation.JPG" alt="Figure 4" width="400"/></center><br>
+
 2. Two panel reporting the predictive accuracy of each model, in the fitted data and simulated data
-![Figure 5](Tools/OTHERS/example_figures/FittedandSimulatedAccuracy.JPG)
-3. A representation of model comparison treated as a fixed-effect, using the EE model as the reference model: positive values correspond to the information loss which would be incured by selecting a model different from EE. Note that a -2*X transformation is applied to every goodness of fit metric because the VBA toolbox outputs log-model evidences by default (see [here](http://mbb-team.github.io/VBA-toolbox/wiki/VBA-output-structure/) for an explanation). Exact values can be found in the variable **diff_metrics**.
-![Figure 6](Tools/OTHERS/example_figures/Model_Comparison_FixedEffect.JPG)
+
+<center><img src="Tools/OTHERS/example_figures/FittedandSimulatedAccuracy.JPG" alt="Figure 5" width="400"/></center><br>
+
+3. A representation of model comparison treated as a fixed-effect, using the VSE model as the reference model: positive values correspond to the information loss which would be incured by selecting a model different from VSE. Note that a -2*X transformation is applied to every goodness of fit metric because the VBA toolbox outputs log-model evidences by default (see [here](http://mbb-team.github.io/VBA-toolbox/wiki/VBA-output-structure/) for an explanation). Exact values can be found in the variable **diff_metrics**.
+
+<center><img src="Tools/OTHERS/example_figures/Model_Comparison_FixedEffect.JPG" alt="Figure 6" width="400"/></center><br>
+
 4. A representation of model comparison treated as a random-effect (based on the function VBA_GroupBMC). Top-left panel represents the log-model evidences (based either on AIC, BIC or Free Energy) per subject per model. Top-right panel represents the probability of each model being the correct one, per subject. Bottom-left panel represents the exceedance probability that a given model is the most frequent within the population under scrutiny. Bottom-right panel represents the estimated frequencies of each model at the group level. NB: a separate figure is generated for each goodness of fit metric (i.e BIC, AIC, Free Energy). All information about Bayesian Model Comparison can be found in the structure **post_F**, **out_F**, **post_BIC**, **out_BIC**, **post_AIC** and **out_AIC**.
-![Figure 7](Tools/OTHERS/example_figures/Model_Comparison_RandomEffect_F.JPG)
+
+<center><img src="Tools/OTHERS/example_figures/Model_Comparison_RandomEffect_F.JPG" alt="Figure 7" width="400"/></center><br>
+
 5. Two panels reporting the number of predicted sequential exploration quadruplets by each model, as well as a sensitivity analysis
-![Figure 8](Tools/OTHERS/example_figures/Directed_Exploration_Models.JPG)
+
+<center><img src="Tools/OTHERS/example_figures/Directed_Exploration_Models.JPG" alt="Figure 8" width="600"/></center><br>
+
 6. A representation of the mean +/- sem value of all parameters of a given model. The color code correspond to the group/condition which have been selected for analysis. NB: a separate figure is generated for each model (here, Expected Valence). All means, SD, recovery values and statistical tests related to models' parameters can be found in the structures **stats_theta** (for parameters of the evolution functions) and **stats_phi** (for parameters of the observation functions)
-![Figure 9](Tools/OTHERS/example_figures/Model_parameter_VPP.JPG)
+
+<center><img src="Tools/OTHERS/example_figures/Model_parameter_VPP.JPG" alt="Figure 9" width="600"/></center><br>
+
 7. A graphical representation of parameter recovery. The dashed line represents the perfect equivalence between actual parameters (in x, obtained by fitting the real dataset) and recovered parameters (in y, obtained by fitting the simulated dataset). Actual and recovered parameters for each individual can be found in the structures **theta_fitsim** and **phi_fitsim** (first column: actual parameters)
-![Figure 10](Tools/OTHERS/example_figures/Parameter_recovery.JPG)
+
+<center><img src="Tools/OTHERS/example_figures/Parameter_recovery.JPG" alt="Figure 10" width="600"/></center><br>
 
 ## perform recovery analysis
 
