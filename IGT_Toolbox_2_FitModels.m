@@ -47,7 +47,7 @@ A.complete_save = 1;
 A.simulate_and_recover = 1;
 
 % 8) Should program use grid-computing? (qsub method / linux)
-A.cluster_run = 1;
+A.cluster_run = 0;
 
 %% Data to be used
 % in order to regenerate the dataset of the 504 subjects open dataset,
@@ -68,7 +68,7 @@ load('IGTdata/toydata/IGTdata.mat');
 
 % 1) Maximal number of subject on which the fit should be performed. Can be
 % useful to use a small number (e.g 5) to check if everything works fine.
-A.fit.maxsubjects = 1000;
+A.fit.maxsubjects = 1;
 
 % 2) Number of trials in the version of the IGT tested. The standard
 % version of the IGT has 100 trials, but some modified versions have 150 or

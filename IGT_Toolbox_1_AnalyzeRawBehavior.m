@@ -33,7 +33,7 @@ colormap_custom = 'brewer1';
 
 for s = 1:length(data)
     
-    disp(['subject nÂ°' num2str(s)])
+    disp(['subject n°' num2str(s)])
     
     % subject id and condition id
     subj_id(s,1) = s;

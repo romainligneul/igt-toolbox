@@ -20,13 +20,13 @@ dim.n_phi = 1;
 dim.n_theta = 2;
 
 switch A.fit.priors.type
-    
-    case 'flat' 
+
+    case 'flat'
         % use strictly bounded priors approximately flat
         % in order to reduce the influence of this flatness assumption, a
         % second-pass might then be used, corresponding to an empirical
         % Bayes approach (priors derived from the data)
-        
+
         priors.muPhi = zeros(dim.n_phi);
         priors.SigmaPhi = 3e0*eye(dim.n_phi);
         priors.muTheta = zeros(dim.n_theta);
@@ -38,10 +38,10 @@ switch A.fit.priors.type
         Texp = @exp;
         Tsig0to5 = @(x) sig(x)*5;
         TsigMin2to2 = @(x) sig(x)*4-2;
-     
-    case 'informed' 
+
+    case 'informed'
         % use priors derived from first pass
-        
+
         priors.muPhi = 0.2530;
         priors.SigmaPhi = 1.1203^2;
         priors.muTheta = [-0.6603   -0.5102];
@@ -55,7 +55,7 @@ switch A.fit.priors.type
         TsigMin2to2 = @(x) sig(x)*4-2;
 
     case 'flat' % use strictly bounded priors (flatness imperfect)
-        
+
         priors.muPhi = zeros(dim.n_phi);
         priors.SigmaPhi = 3e0*eye(dim.n_phi);
         priors.muTheta = zeros(dim.n_theta);
@@ -67,10 +67,10 @@ switch A.fit.priors.type
         Texp = @exp;
         Tsig0to5 = @(x) sig(x)*5;
         TsigMin2to2 = @(x) sig(x)*4-2;
-        
+
 
     case 'shrinkage'
-        
+
         priors = []; % default settings of the VBA toolbox
         priors.muX0(1:4,1) = [0 0 0 0];
 
@@ -80,15 +80,15 @@ switch A.fit.priors.type
         Tsig0to5 = Traw;
         Tsig0to2 = Traw;
         TsigMin2to2 = Traw;
-                
+
 end
 
 %% transformation of parameters
 % inF = evolution
-options.inF.param_name = {'attention weight', 'updating'};
+options.inF.param_name = {'Attention weight (value)', 'Updating (value)'};
 options.inF.param_transform = {Tsig Tsig};
 % inG = observation
-options.inG.param_name = {'consistency'};
+options.inG.param_name = {'Consistency'};
 options.inG.param_transform = {TsigMin2to2};
 
 %% build hidden states of interest.
@@ -110,9 +110,9 @@ A.fit.obsf = obsf;
 %% perform subject-wise or hierarchical fitting
 
 for s = 1:length(A.fit.u)
-    
+
     disp(['%%%%%%%%%% SUBJECT ' num2str(s) ' %%%%%%%%%%%']);
-    
+
     % uses subject-specific priors if available (method second-pass)
     try
         options.priors = priors{s};
@@ -126,27 +126,27 @@ for s = 1:length(A.fit.u)
     else
         [posterior{s}, out{s}] = VBA_NLStateSpaceModel(A.fit.y{s},A.fit.u{s},evof,obsf,dim,options);
     end
-    
+
     % log info
     R.GoF(s,1) =  out{s}.F;
     R.GoF(s,2) =  out{s}.fit.BIC;
     R.GoF(s,3) =  out{s}.fit.AIC;
     R.GoF(s,4) =  out{s}.fit.LL;
-    
+
     % evolution parameters
     for pp = 1:length(posterior{s}.muTheta)
         R.theta(s,pp) = options.inF.param_transform{pp}(posterior{s}.muTheta(pp));
     end;
     R.rawMuTheta(s,:) = posterior{s}.muTheta;
     R.rawSigmaTheta(s,:,:) = posterior{s}.SigmaTheta;
-    
+
     % observation parameters
     for pp = 1:length(posterior{s}.muPhi)
         R.phi(s,pp) = options.inG.param_transform{pp}(posterior{s}.muPhi(pp));
     end;
     R.rawMuPhi(s,:) = posterior{s}.muPhi;
     R.rawSigmaPhi(s,:,:) = posterior{s}.SigmaPhi;
-    
+
     % model dynamics
     R.hidden_states(s,:,:) = posterior{s}.muX;
     for t = 1:size(posterior{s}.muX,2)
@@ -158,19 +158,19 @@ for s = 1:length(A.fit.u)
         end
     end
     R.choice_prob(s,:,:) = out{s}.suffStat.gx;
-    
+
     % stop analysis at maxsujects if required
     if s == A.fit.maxsubjects
         break
     end
-    
+
 end
 
 
 %% simulate & recover
 
 if A.simulate_and_recover && A.fit.fminunc==0
-    
+
     %%% prepare feedbacks for simulation analysis
     for d = 1:4
         deck_fb{d} = [];
@@ -183,15 +183,15 @@ if A.simulate_and_recover && A.fit.fminunc==0
     for d = 1:4
         ranges(d,:) = [min(deck_fb{d}(:,1)) max(deck_fb{d}(:,1)) min(deck_fb{d}(deck_fb{d}(:,2)>0,2)) max(deck_fb{d}(:,2)) ];
     end
-    
+
     fb.h_fname = @feedback_IOWA;
     fb.inH = deck_fb;
     % allocate input for feedback simulation
     fb.indfb = [3 4];
     fb.indy = [7:10];
-    
+
     for s=1:length(A.fit.u)
-        
+
         % set-up simulation
         theta = posterior{s}.muTheta;
         phi = posterior{s}.muPhi;
@@ -201,7 +201,7 @@ if A.simulate_and_recover && A.fit.fminunc==0
         simopts.DisplayWin = 0;
         x0 = posterior{s}.muX0;
         n_t = 100;
-        
+
         % recover parameters (sometimes the simulation fails due to
         % aberrant series of outcomes which exceed the numerical capacities
         % of matlab, ie when x>exp(710), then try until ok)
@@ -215,7 +215,7 @@ if A.simulate_and_recover && A.fit.fminunc==0
             end
             count = count+1;
         end
-        
+
         % log info of the re-fit
         R.simulation.theta_recovered(s,:) = sim_post.muTheta;
         R.simulation.phi_recovered(s,:) = sim_post.muPhi;
@@ -230,18 +230,18 @@ if A.simulate_and_recover && A.fit.fminunc==0
         R.simulation.simulated_gains(s,:) = sim_u(3,:);
         R.simulation.simulated_loss(s,:) = sim_u(4,:);
         R.simulation.choice_prob(s,:,:) = sim_out.suffStat.gx;
-        
+
         % log GoF
         R.simulation.GoF(s,1) =  sim_out.F;
         R.simulation.GoF(s,2) =  sim_out.fit.BIC;
         R.simulation.GoF(s,3) =  sim_out.fit.AIC;
         R.simulation.GoF(s,4) =  sim_out.fit.LL;
-        
+
         % stop analysis at maxsujects if required
         if ~isempty(A.fit.maxsubjects) && s == A.fit.maxsubjects
             break
         end
-        
+
     end
 end
 
@@ -263,7 +263,7 @@ if A.complete_save==1
 elseif A.complete_save==-1
     save([R.output_subdir '/fitted_model'], 'R');
 else
-    save([R.output_subdir '/fitted_model'], 'R', 'A');    
+    save([R.output_subdir '/fitted_model'], 'R', 'A');
 end
 % save script in dir
 scriptname  = mfilename('fullpath');

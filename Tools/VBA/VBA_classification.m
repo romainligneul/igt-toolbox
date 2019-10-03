@@ -188,7 +188,8 @@ if ~isequal(k,0)
     all.stat.success = acc; % nx1 vector of successful classifications
     all.stat.pa = nok./n; % cross-validation prediction accuracy
     all.stat.bpa = 0.5*(sum(acc.*y)./sum(y) + sum(acc.*(1-y))./sum(1-y)); % balanced class. acc.
-    all.stat.pBayes = VBA_PPM(nok+options.n0,n-nok+options.n0,r,'beta',0); % Bayesian exceedance prob.
+    % fix the order of last 2 arguments: all.stat.pBayes = VBA_PPM(nok+options.n0,n-nok+options.n0,r,'beta',0)
+    all.stat.pBayes = VBA_PPM(nok+options.n0,n-nok+options.n0,r,0, 'beta'); % Bayesian exceedance prob.
     all.Eg = Eg;
     all.Vg = Vg;
     all.P = P; % set of estimated weights (for each k-fold)
