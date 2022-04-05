@@ -1,6 +1,7 @@
 # igt-toolbox
 
-The purpose of the igt-toolbox is to facilitate the analysis/reanalysis of data from the standard version of the [Iowa Gambling Task](https://en.wikipedia.org/wiki/Iowa_gambling_task).
+The purpose of the igt-toolbox is to facilitate the analysis/reanalysis of data from the standard version of the [Iowa Gambling Task](https://en.wikipedia.org/wiki/Iowa_gambling_task). It has been validated and published in the following publication:
+> Ligneul (2019). Sequential exploration in the Iowa gambling task: Validation of a new computational model in a large dataset of young and old healthy participants, PloS Comp Biol (https://doi.org/10.1371/journal.pcbi.1006989).
 
 Before discussing the specificities of the toolbox, it must be noted that the toolbox relies heavily on two excellent and well-documented Matlab packages:
 1. The [VBA toolbox](https://mbb-team.github.io/VBA-toolbox/) developed by Jean Daunizeau and Lionel Rigoux. Almost all model fitting and model comparison procedures included in the igt-toolbox depend on VBA (for Variational Bayes Analysis).
